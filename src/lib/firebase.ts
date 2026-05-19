@@ -4,15 +4,18 @@ import { getDatabase } from "firebase/database";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBR0yTziYP1T9WkdhNN6VAwebJmYSyrgqo",
-  authDomain: "sanki-112566.firebaseapp.com",
-  databaseURL: "https://sanki-112566-default-rtdb.firebaseio.com",
-  projectId: "sanki-112566",
-  storageBucket: "sanki-112566.firebasestorage.app",
-  messagingSenderId: "259312660612",
-  appId: "1:259312660612:web:324834f8a80409072d92d1",
-  measurementId: "G-02VMTGR7W4",
+  apiKey: "AIzaSyCEdkofdgb8-n7cOoGem04NnvmmHpYFY10",
+  authDomain: "heartable-voice.firebaseapp.com",
+  databaseURL: "https://heartable-voice-default-rtdb.firebaseio.com",
+  projectId: "heartable-voice",
+  storageBucket: "heartable-voice.firebasestorage.app",
+  messagingSenderId: "25885730901",
+  appId: "1:25885730901:web:3d068c81bf3dc07ecf4cdc",
+  measurementId: "G-N2V0M7H3RS",
 };
+
+export const GUEST_DAILY_VOICE_LIMIT = 4;
+export const GUEST_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const VOICE_ROOT = "voice";
 

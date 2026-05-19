@@ -7,6 +7,7 @@ import { Recorder } from "@/components/Recorder";
 import { VoicePlayer } from "@/components/VoicePlayer";
 import { BottomNav } from "@/components/BottomNav";
 import { postFeed, postStory } from "@/lib/voice-api";
+import { consumeGuestQuota, getGuestQuota } from "@/lib/voice-api";
 import { shouldRemindStreakBreak, badgeFor } from "@/lib/streak";
 import type { VoiceFilter } from "@/lib/audio-filters";
 
@@ -57,6 +58,21 @@ function Home() {
   const [busy, setBusy] = useState(false);
   const [showStreakWarn, setShowStreakWarn] = useState(false);
   const [mode, setMode] = useState<"feed" | "story">("feed");
+  const [quota, setQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null);
+
+  useEffect(() => {
+    if (!user || !isGuest) { setQuota(null); return; }
+    let alive = true;
+    const tick = () => getGuestQuota(user.uid).then((q) => alive && setQuota(q)).catch(() => {});
+    tick();
+    const id = setInterval(tick, 15000);
+    return () => { alive = false; clearInterval(id); };
+  }, [user, isGuest, busy]);
+
+  // Guest can't post stories
+  useEffect(() => {
+    if (isGuest && mode === "story") setMode("feed");
+  }, [isGuest, mode]);
 
   // Redirect if not signed in
   useEffect(() => {
@@ -124,8 +140,13 @@ function Home() {
 
   const handleSubmit = async (blob: Blob, filter: VoiceFilter, durationSec: number) => {
     if (!user || !profile) return;
+    if (isGuest && mode === "story") {
+      alert("Stories sirf accounts ke liye. Profile se Google/Email link kar le.");
+      return;
+    }
     setBusy(true);
     try {
+      if (isGuest) await consumeGuestQuota(user.uid);
       if (mode === "story") {
         await postStory({
           uid: user.uid,
@@ -177,9 +198,11 @@ function Home() {
 
         {isGuest && (
           <div className="mx-6 mb-4 px-4 py-2.5 rounded-2xl bg-sunset-200/60 text-[11px] text-sunset-900 flex items-center justify-between gap-2">
-            <span>Guest mode · 7 din valid</span>
+            <span>
+              Guest · {quota ? `${quota.remaining}/${quota.limit} voice baaki aaj` : "4/day limit"}
+            </span>
             <Link to="/profile" className="font-semibold underline">
-              Save your streaks
+              Upgrade
             </Link>
           </div>
         )}
@@ -241,12 +264,18 @@ function Home() {
             {(["feed", "story"] as const).map((m) => (
               <button
                 key={m}
-                onClick={() => setMode(m)}
+                onClick={() => {
+                  if (m === "story" && isGuest) {
+                    alert("24h Stories sirf accounts ke liye. Profile se upgrade kar le.");
+                    return;
+                  }
+                  setMode(m);
+                }}
                 className={`flex-1 py-1.5 rounded-full transition ${
                   mode === m ? "bg-sunset-900 text-sunset-50" : "text-sunset-900/70"
-                }`}
+                } ${m === "story" && isGuest ? "opacity-50" : ""}`}
               >
-                {m === "feed" ? "Post to Mehfil" : "24h Story"}
+                {m === "feed" ? "Post to Feed" : isGuest ? "24h Story 🔒" : "24h Story"}
               </button>
             ))}
           </div>

@@ -4,6 +4,7 @@ import { onValue, push, ref, set } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { BottomNav } from "@/components/BottomNav";
+import { GuestLock } from "@/components/GuestLock";
 
 export const Route = createFileRoute("/mehfil")({
   head: () => ({ meta: [{ title: "Mehfil — Heartable" }] }),
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/mehfil")({
 type Circle = { id: string; name: string; members: number };
 
 function MehfilList() {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const navigate = useNavigate();
   const [circles, setCircles] = useState<Circle[]>([]);
   const [newName, setNewName] = useState("");
@@ -33,6 +34,8 @@ function MehfilList() {
     });
     return () => unsub();
   }, []);
+
+  if (isGuest) return <GuestLock feature="Mehfil" />;
 
   const create = async () => {
     if (!user || !newName.trim()) return;
