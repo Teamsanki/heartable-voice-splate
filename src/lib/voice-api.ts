@@ -1,10 +1,37 @@
 import { push, ref as dbRef, serverTimestamp, set } from "firebase/database";
 import { getDownloadURL, ref as sRef, uploadBytes } from "firebase/storage";
-import { db, storage, VOICE_ROOT } from "./firebase";
+import { get, runTransaction } from "firebase/database";
+import { db, storage, VOICE_ROOT, GUEST_DAILY_VOICE_LIMIT } from "./firebase";
 import { bumpStreak } from "./streak";
 import type { VoiceFilter } from "./audio-filters";
 
 const DAY = 24 * 60 * 60 * 1000;
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export async function getGuestQuota(uid: string) {
+  const k = todayKey();
+  const snap = await get(dbRef(db, `${VOICE_ROOT}/${uid}/quota/${k}`));
+  const used = (snap.val() as number) || 0;
+  return { used, limit: GUEST_DAILY_VOICE_LIMIT, remaining: Math.max(0, GUEST_DAILY_VOICE_LIMIT - used) };
+}
+
+export async function consumeGuestQuota(uid: string) {
+  const k = todayKey();
+  const r = dbRef(db, `${VOICE_ROOT}/${uid}/quota/${k}`);
+  const res = await runTransaction(r, (cur) => {
+    const n = (cur as number) || 0;
+    if (n >= GUEST_DAILY_VOICE_LIMIT) return cur; // abort by no-change
+    return n + 1;
+  });
+  const val = (res.snapshot.val() as number) || 0;
+  if (val > GUEST_DAILY_VOICE_LIMIT || (!res.committed)) {
+    throw new Error(`Guest limit khatm — aaj ke ${GUEST_DAILY_VOICE_LIMIT} voice use ho gaye. Account banaa le.`);
+  }
+}
 
 async function uploadBlob(uid: string, blob: Blob, kind: string) {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
