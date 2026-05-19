@@ -24,11 +24,10 @@ export async function consumeGuestQuota(uid: string) {
   const r = dbRef(db, `${VOICE_ROOT}/${uid}/quota/${k}`);
   const res = await runTransaction(r, (cur) => {
     const n = (cur as number) || 0;
-    if (n >= GUEST_DAILY_VOICE_LIMIT) return cur; // abort by no-change
+    if (n >= GUEST_DAILY_VOICE_LIMIT) return; // abort
     return n + 1;
   });
-  const val = (res.snapshot.val() as number) || 0;
-  if (val > GUEST_DAILY_VOICE_LIMIT || (!res.committed)) {
+  if (!res.committed) {
     throw new Error(`Guest limit khatm — aaj ke ${GUEST_DAILY_VOICE_LIMIT} voice use ho gaye. Account banaa le.`);
   }
 }
