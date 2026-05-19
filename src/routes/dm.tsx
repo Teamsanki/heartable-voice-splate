@@ -4,6 +4,7 @@ import { onValue, ref } from "firebase/database";
 import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { BottomNav } from "@/components/BottomNav";
+import { GuestLock } from "@/components/GuestLock";
 
 export const Route = createFileRoute("/dm")({
   head: () => ({ meta: [{ title: "Messages — Heartable" }] }),
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/dm")({
 type Person = { uid: string; name: string; photo?: string | null };
 
 function DMList() {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [people, setPeople] = useState<Person[]>([]);
 
   useEffect(() => {
@@ -34,6 +35,8 @@ function DMList() {
     });
     return () => unsub();
   }, [user]);
+
+  if (isGuest) return <GuestLock feature="Messages" />;
 
   return (
     <div className="min-h-screen bg-sunset-50 text-sunset-900">

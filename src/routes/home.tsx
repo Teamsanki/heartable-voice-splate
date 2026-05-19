@@ -264,12 +264,18 @@ function Home() {
             {(["feed", "story"] as const).map((m) => (
               <button
                 key={m}
-                onClick={() => setMode(m)}
+                onClick={() => {
+                  if (m === "story" && isGuest) {
+                    alert("24h Stories sirf accounts ke liye. Profile se upgrade kar le.");
+                    return;
+                  }
+                  setMode(m);
+                }}
                 className={`flex-1 py-1.5 rounded-full transition ${
                   mode === m ? "bg-sunset-900 text-sunset-50" : "text-sunset-900/70"
-                }`}
+                } ${m === "story" && isGuest ? "opacity-50" : ""}`}
               >
-                {m === "feed" ? "Post to Mehfil" : "24h Story"}
+                {m === "feed" ? "Post to Feed" : isGuest ? "24h Story 🔒" : "24h Story"}
               </button>
             ))}
           </div>
