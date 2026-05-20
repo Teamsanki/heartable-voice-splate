@@ -60,7 +60,7 @@ export function listenComments(
 ) {
   return onValue(ref(db, `comments/${postId}`), (snap) => {
     const out: any[] = [];
-    snap.forEach((c) => out.push({ id: c.key!, ...(c.val() as any) }));
+    snap.forEach((c) => { out.push({ id: c.key!, ...(c.val() as any) }); });
     cb(out.sort((a, b) => a.createdAt - b.createdAt));
   });
 }
@@ -241,7 +241,7 @@ export function listenTicketMsgs(
 ) {
   return onValue(ref(db, `tickets/${ticketId}/messages`), (snap) => {
     const out: any[] = [];
-    snap.forEach((c) => out.push({ id: c.key!, ...(c.val() as any) }));
+    snap.forEach((c) => { out.push({ id: c.key!, ...(c.val() as any) }); });
     cb(out.sort((a, b) => a.createdAt - b.createdAt));
   });
 }
@@ -249,7 +249,7 @@ export function listenTicketMsgs(
 export function listenAllTickets(cb: (t: Ticket[]) => void) {
   return onValue(ref(db, "tickets"), (snap) => {
     const out: Ticket[] = [];
-    snap.forEach((c) => out.push({ id: c.key!, ...(c.val() as any) }));
+    snap.forEach((c) => { out.push({ id: c.key!, ...(c.val() as any) }); });
     cb(out.sort((a, b) => b.lastMsgAt - a.lastMsgAt));
   });
 }
