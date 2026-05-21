@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { VoicePlayer } from "./VoicePlayer";
 import { CommentSheet } from "./CommentSheet";
+import { FollowButton } from "./FollowButton";
 import { listenLiked, toggleLike, recordShare } from "@/lib/social";
 import { useAuth } from "@/lib/auth-context";
 import type { VoiceFilter } from "@/lib/audio-filters";
@@ -78,7 +79,10 @@ export function FeedCard({ item }: { item: FeedItem }) {
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-medium opacity-40">{timeAgo(item.createdAt)}</span>
+          <div className="flex items-center gap-2">
+            <FollowButton targetUid={item.uid} />
+            <span className="text-[10px] font-medium opacity-40">{timeAgo(item.createdAt)}</span>
+          </div>
         </div>
 
         {item.caption && (
