@@ -12,6 +12,8 @@ import { GuestExpiryCard } from "@/components/GuestExpiryCard";
 import { postFeed, postStory } from "@/lib/voice-api";
 import { consumeGuestQuota, getGuestQuota } from "@/lib/voice-api";
 import { shouldRemindStreakBreak, badgeFor } from "@/lib/streak";
+import { listenNotifs } from "@/lib/notifications-store";
+import { Bell } from "lucide-react";
 import type { VoiceFilter } from "@/lib/audio-filters";
 
 type StoryItem = {
@@ -48,6 +50,12 @@ function Home() {
   const [showStreakWarn, setShowStreakWarn] = useState(false);
   const [mode, setMode] = useState<"feed" | "story">("feed");
   const [quota, setQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null);
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    return listenNotifs(user.uid, (ns) => setUnread(ns.filter((n) => !n.read).length));
+  }, [user]);
 
   useEffect(() => {
     if (!user || !isGuest) { setQuota(null); return; }
@@ -176,12 +184,23 @@ function Home() {
               Voices of the Soul
             </p>
           </div>
+          <div className="flex items-center gap-2">
+            <Link to="/notifications" aria-label="Notifications"
+              className="relative size-10 rounded-full bg-sunset-100 grid place-items-center">
+              <Bell className="size-4" />
+              {unread > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-sunset-600 text-white text-[9px] grid place-items-center font-bold">
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
+            </Link>
           <Link
             to="/profile"
             className="size-10 rounded-full bg-sunset-900 text-sunset-50 grid place-items-center text-sm font-semibold"
           >
             {(profile?.name || "U").slice(0, 1).toUpperCase()}
           </Link>
+          </div>
         </header>
 
         <BroadcastBanner />

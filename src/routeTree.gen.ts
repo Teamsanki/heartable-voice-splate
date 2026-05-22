@@ -11,12 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrendingRouteImport } from './routes/trending'
 import { Route as SupportRouteImport } from './routes/support'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecordRouteImport } from './routes/record'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MehfilRouteImport } from './routes/mehfil'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DmRouteImport } from './routes/dm'
+import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StoryIdRouteImport } from './routes/story.$id'
@@ -34,6 +37,11 @@ const SupportRoute = SupportRouteImport.update({
   path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordRoute = RecordRouteImport.update({
   id: '/record',
   path: '/record',
@@ -42,6 +50,11 @@ const RecordRoute = RecordRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MehfilRoute = MehfilRouteImport.update({
@@ -62,6 +75,11 @@ const HomeRoute = HomeRouteImport.update({
 const DmRoute = DmRouteImport.update({
   id: '/dm',
   path: '/dm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BannedRoute = BannedRouteImport.update({
+  id: '/banned',
+  path: '/banned',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -98,12 +116,15 @@ const DmUidRoute = DmUidRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
   '/dm/$uid': typeof DmUidRoute
@@ -114,12 +135,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
   '/dm/$uid': typeof DmUidRoute
@@ -131,12 +155,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
   '/dm/$uid': typeof DmUidRoute
@@ -149,12 +176,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/banned'
     | '/dm'
     | '/home'
     | '/login'
     | '/mehfil'
+    | '/notifications'
     | '/profile'
     | '/record'
+    | '/settings'
     | '/support'
     | '/trending'
     | '/dm/$uid'
@@ -165,12 +195,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/banned'
     | '/dm'
     | '/home'
     | '/login'
     | '/mehfil'
+    | '/notifications'
     | '/profile'
     | '/record'
+    | '/settings'
     | '/support'
     | '/trending'
     | '/dm/$uid'
@@ -181,12 +214,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/banned'
     | '/dm'
     | '/home'
     | '/login'
     | '/mehfil'
+    | '/notifications'
     | '/profile'
     | '/record'
+    | '/settings'
     | '/support'
     | '/trending'
     | '/dm/$uid'
@@ -198,12 +234,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  BannedRoute: typeof BannedRoute
   DmRoute: typeof DmRouteWithChildren
   HomeRoute: typeof HomeRoute
   LoginRoute: typeof LoginRoute
   MehfilRoute: typeof MehfilRouteWithChildren
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   RecordRoute: typeof RecordRoute
+  SettingsRoute: typeof SettingsRoute
   SupportRoute: typeof SupportRoute
   TrendingRoute: typeof TrendingRoute
   PIdRoute: typeof PIdRoute
@@ -226,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/record': {
       id: '/record'
       path: '/record'
@@ -238,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mehfil': {
@@ -266,6 +319,13 @@ declare module '@tanstack/react-router' {
       path: '/dm'
       fullPath: '/dm'
       preLoaderRoute: typeof DmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/banned': {
+      id: '/banned'
+      path: '/banned'
+      fullPath: '/banned'
+      preLoaderRoute: typeof BannedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -337,12 +397,15 @@ const MehfilRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  BannedRoute: BannedRoute,
   DmRoute: DmRouteWithChildren,
   HomeRoute: HomeRoute,
   LoginRoute: LoginRoute,
   MehfilRoute: MehfilRouteWithChildren,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   RecordRoute: RecordRoute,
+  SettingsRoute: SettingsRoute,
   SupportRoute: SupportRoute,
   TrendingRoute: TrendingRoute,
   PIdRoute: PIdRoute,
@@ -351,13 +414,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

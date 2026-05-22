@@ -36,12 +36,31 @@ export function useRecorder(maxSec = 60) {
     if (state === "recording") return;
     setBlob(null);
     chunksRef.current = [];
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Mic API not available. iOS users: Safari me kholo, in-app browser me nahi.");
+    }
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     streamRef.current = stream;
-    const mr = new MediaRecorder(stream);
+    // iOS Safari needs audio/mp4; everything else prefers webm/opus
+    const candidates = [
+      "audio/mp4;codecs=mp4a.40.2",
+      "audio/mp4",
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "",
+    ];
+    const MR: any = (window as any).MediaRecorder;
+    let mime = "";
+    for (const c of candidates) {
+      if (!c || (MR && typeof MR.isTypeSupported === "function" && MR.isTypeSupported(c))) {
+        mime = c; break;
+      }
+    }
+    const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    const finalType = mr.mimeType || mime || "audio/webm";
     mr.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
     mr.onstop = () => {
-      const b = new Blob(chunksRef.current, { type: "audio/webm" });
+      const b = new Blob(chunksRef.current, { type: finalType });
       setBlob(b);
       cleanup();
       setState("stopped");
@@ -51,6 +70,7 @@ export function useRecorder(maxSec = 60) {
 
     const AC = window.AudioContext || (window as any).webkitAudioContext;
     const ctx = new AC();
+    if (ctx.state === "suspended") { try { await ctx.resume(); } catch {} }
     audioCtxRef.current = ctx;
     const src = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();

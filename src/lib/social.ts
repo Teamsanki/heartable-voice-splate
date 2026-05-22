@@ -10,6 +10,7 @@ import {
   update,
 } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
+import { pushNotif } from "./notifications-store";
 
 /** Toggle like on a feed post. Returns new state. */
 export async function toggleLike(postId: string, uid: string) {
@@ -28,11 +29,22 @@ export async function toggleLike(postId: string, uid: string) {
   // bump owner stats
   const ownerSnap = await get(ref(db, `feed/${postId}/uid`));
   const owner = ownerSnap.val();
-  if (owner)
+  if (owner) {
     await runTransaction(
       ref(db, `userStats/${owner}/totalLikes`),
       (n: any) => (n || 0) + 1,
     );
+    if (owner !== uid) {
+      const meSnap = await get(ref(db, `${VOICE_ROOT}/${uid}/profile/name`));
+      await pushNotif(owner, {
+        kind: "like",
+        fromUid: uid,
+        fromName: meSnap.val() || "Someone",
+        postId,
+        text: "liked your voice",
+      });
+    }
+  }
   return true;
 }
 
@@ -49,6 +61,17 @@ export async function addComment(
   const node = push(ref(db, `comments/${postId}`));
   await set(node, { uid, name, text: text.slice(0, 300), createdAt: Date.now() });
   await runTransaction(ref(db, `feed/${postId}/commentCount`), (n: any) => (n || 0) + 1);
+  const ownerSnap = await get(ref(db, `feed/${postId}/uid`));
+  const owner = ownerSnap.val();
+  if (owner && owner !== uid) {
+    await pushNotif(owner, {
+      kind: "comment",
+      fromUid: uid,
+      fromName: name,
+      postId,
+      text: text.slice(0, 80),
+    });
+  }
   return node.key!;
 }
 
@@ -88,6 +111,13 @@ export async function follow(followerUid: string, followeeUid: string) {
     ref(db, `userStats/${followeeUid}/followers`),
     (n: any) => (n || 0) + 1,
   );
+  const meSnap = await get(ref(db, `${VOICE_ROOT}/${followerUid}/profile/name`));
+  await pushNotif(followeeUid, {
+    kind: "follow",
+    fromUid: followerUid,
+    fromName: meSnap.val() || "Someone",
+    text: "followed you",
+  });
 }
 
 export async function unfollow(followerUid: string, followeeUid: string) {
@@ -113,6 +143,49 @@ export function listenFollowing(
   return onValue(ref(db, `follows/${followerUid}/${followeeUid}`), (s) =>
     cb(s.exists()),
   );
+}
+
+/** Are A and B mutual followers (friends)? */
+export async function areFriends(a: string, b: string) {
+  const [s1, s2] = await Promise.all([
+    get(ref(db, `follows/${a}/${b}`)),
+    get(ref(db, `follows/${b}/${a}`)),
+  ]);
+  return s1.exists() && s2.exists();
+}
+
+export function listenFriends(myUid: string, cb: (friendUids: string[]) => void) {
+  return onValue(ref(db, `follows/${myUid}`), async (snap) => {
+    const ids: string[] = [];
+    snap.forEach((c) => { ids.push(c.key!); });
+    // intersect with their follows of me
+    const checks = await Promise.all(
+      ids.map((id) => get(ref(db, `follows/${id}/${myUid}`))),
+    );
+    cb(ids.filter((_, i) => checks[i].exists()));
+  });
+}
+
+/** Update profile name. */
+export async function updateProfileName(uid: string, name: string) {
+  await update(ref(db, `${VOICE_ROOT}/${uid}/profile`), { name: name.slice(0, 40) });
+}
+
+export async function updateProfilePhoto(uid: string, photoUrl: string) {
+  await update(ref(db, `${VOICE_ROOT}/${uid}/profile`), { photo: photoUrl });
+}
+
+/** Delete own post. */
+export async function deletePost(postId: string) {
+  await update(ref(db), {
+    [`feed/${postId}`]: null,
+    [`comments/${postId}`]: null,
+  });
+}
+
+/** Delete own story. */
+export async function deleteStory(uid: string, storyId: string) {
+  await remove(ref(db, `${VOICE_ROOT}/${uid}/stories/${storyId}`));
 }
 
 export type UserStats = {

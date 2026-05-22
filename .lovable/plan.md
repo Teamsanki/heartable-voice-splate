@@ -1,147 +1,109 @@
-# Heartable — Bada Update Plan
+# Phase 2 — Heartable Pro Build
 
-Bahut saare features ek saath maange hain. Main inhe **4 phases** me todunga taaki har phase test ho sake. Aap "ha shuru kro" bolenge to phase 1 se start karunga, ya specific phase chunenge.
+Bhai ye bohot bada scope hai. Pehle plan lock karte hain, fir ek-ek karke clean implement hoga. Sab Firebase Realtime DB me `heartable/users/{uid}/...` structure me save hoga.
 
----
+## 1. Audio FX — 10 naye effects (record + trending dono pe)
+`src/lib/audio-filters.ts` me extend:
+- existing: normal, reverb, echo, radio, deep, chipmunk
+- naye: **autotune** (pitch-quantize via PeriodicWave), **telephone** (bandpass), **underwater** (lowpass+chorus), **megaphone** (distortion+bandpass), **whisper** (noise gate), **alien** (ring mod), **stadium** (long reverb), **8-bit** (bitcrusher), **slow-mo** (playbackRate 0.7), **fast-fwd** (1.4x)
+- TrendingCard pe filter name chip dikhega (`✨ autotune`)
 
-## Phase 1 — Foundation Fixes (chhoti but zaroori cheezein)
+## 2. iOS voice button fix
+- Mic permission ke liye `getUserMedia` ko **user gesture** ke andar call karna (iOS strict)
+- `AudioContext.resume()` har record start pe
+- MediaRecorder mimeType fallback chain: `audio/mp4` (iOS) → `audio/webm;codecs=opus` → default
+- `Recorder.tsx` me touch + click dono handlers
 
-1. **Guest quota timezone-safe**
-   - `todayKey()` me user ke local timezone ka YYYY-MM-DD use hoga (abhi bhi local hai but explicit karunga)
-   - Quota UI me midnight ke baad auto-refresh (poll har 15s already hai — date change detect karunga)
-   - Server-side rule bhi date-key ke saath enforce hoga
+## 3. TikTok feed upgrade
+- Circular profile pic + name overlay
+- **Voice visualizer ring** (canvas) circle ke neeche, BG bhi visualizer hue se animate
+- Follow button (already hai) + filter chip
+- Block-aware (blocked posts skip)
 
-2. **Guest 7-day expiry — live timer + disable**
-   - Profile page me bada countdown card ("6d 4h 22m baaki")
-   - Home header me chhota chip
-   - Expiry hote hi auto sign-out + `/login` pe "Account expire ho gaya — rebind karein" CTA
-   - Login page pe naya **"Continue with Google to restore"** button (anonymous → Google link agar same browser me session ho)
+## 4. Profile system
+- Editable name (inline edit)
+- Profile photo upload (Supabase storage `voice` bucket me `avatars/{uid}.jpg`)
+- Verified tick badges:
+  - **Bronze**: 1K followers + 500 likes
+  - **Silver**: 10K followers + 5K likes
+  - **Gold**: 100K followers + 50K likes
+  - **Diamond**: 1M followers
+- Trending pe bhi follow button + tick
 
-3. **Mobile UI polish (pura app)**
-   - Sab routes ko `max-w-[460px]` se hata kar fluid responsive (mobile-first, tablet/desktop pe center column)
-   - Bottom nav: safe-area inset, active glow, FAB Mic ko proper raise
-   - Stories bar: snap-scroll, larger touch targets
-   - Recorder card: full-width on mobile, big tap zone
-   - Feed cards: edge-to-edge on <400px
+## 5. Settings (top-right gear icon — `/settings`)
+Profile se Help/Signout hata ke yahan:
+- Theme: Dark / System / Light (default dark, persist in RTDB)
+- Online activity: on/off
+- Block list (manage/unblock)
+- Privacy Policy link
+- Help (support ticket)
+- Sign out
+- Delete my voices / stories
 
----
+## 6. Block system
+- `heartable/users/{uid}/blocks/{blockedUid}: true`
+- Blocker side: blocked user ki feed/posts hide
+- Blocked user side: blocker ka name = "Heartable User", DP hidden, chat send disabled
+- DM list block-aware
 
-## Phase 2 — Short-Voice Social Layer (TikTok-style for voice)
+## 7. Chat (Friends-only DM) + media
+- Sirf mutual follow (friends) ke saath DM allow
+- DM list sirf friends dikhega
+- Voice + image + text messages
+- Report button DM top: **Chat report** (select messages → forward to admin) / **User report**
 
-Yeh main feature hai. Concept: vertical swipeable feed of short voice posts (≤60s) with caption, like, comment, share, follow.
+## 8. Reports & Admin moderation
+- `heartable/reports/{id}` — feed/voice/user/chat report with reason + link
+- Admin panel pe reports tab → action: delete voice / ban voice / warn user / ban user / give penalty
+- Banned user → ban screen, data hidden everywhere
 
-### New routes / components
-- `/reels` ya `/home` ko convert — **vertical full-screen voice cards**, swipe up/down (touch + keyboard)
-- Each card: big artwork (user photo blurred bg + waveform), caption/shayari text overlay, play/pause tap-anywhere
-- Action rail (right side): ❤ like count, 💬 comment count, ↗ share, • follow button
+## 9. Stories
+- Reactions notify owner (`notifications/{uid}` me entry)
+- Friends to friends → reply directly opens DM with story attached
+- **Admin permanent stories** (>24h, no auto-expire)
+- User can delete own story / voice
 
-### Data model additions (Firebase RTDB)
-```
-feed/{postId}
-  ├─ uid, name, photo, url, filter, caption, durationSec
-  ├─ category: "song" | "shayari" | "story" | "other"
-  ├─ likes: { uid: true }          # count via .size
-  ├─ likeCount: number              # denormalized
-  ├─ commentCount: number
-  └─ shareCount: number
+## 10. Notifications center (`/notifications`)
+- In-app feed: likes, comments, follows, story reactions, admin messages
+- Browser push: admin broadcast (already done) + extend to likes if permission granted
+- Bell icon on home with unread badge
 
-comments/{postId}/{commentId}
-  └─ uid, name, text, createdAt
+## 11. Owner / Admin / User roles
+- Owner: `schoudhary11256@gmail.com` (already)
+- Owner can promote user → admin (limited): only user manage + tickets reply
+- Owner can change: site name, tagline, favicon (stored in `heartable/site/config`, applied via `__root.tsx` head)
+- Admins: cannot change site config
 
-follows/{followerUid}/{followeeUid}: true
-followers/{followeeUid}/{followerUid}: true
-userStats/{uid}: { followers, following, totalLikes, totalShares }
-```
-
-### UI work
-- Comment sheet (bottom drawer) with realtime list
-- Share: Web Share API + copy-link fallback (`/p/{postId}` public route)
-- Follow button on cards + profile
-- Profile page redesign: stats row (Followers · Following · Likes · Shares), grid of own posts
-- Category selector on recorder (Song / Shayari / Story / Other)
-
-### Guest restrictions
-- Guest can like + comment (limited?) — confirm: abhi default **like haa, comment 5/day, follow nahi, share haa**
-
----
-
-## Phase 3 — Daily Streak Browser Notifications
-
-- Service worker register (`/sw.js`) for push
-- `Notification.requestPermission()` on first home visit (soft prompt card first)
-- Local scheduled reminder via SW + IndexedDB timestamp (every evening 8pm local if streak risk)
-- Admin broadcast push (Phase 4 se connect)
-- FCM Web Push setup using existing Firebase project (requires VAPID key — aap Firebase Console → Cloud Messaging → Web Push certs se generate karenge, mujhe paste karenge)
-
----
-
-## Phase 4 — Admin Panel + Support System
-
-Admin: **schoudhary11256@gmail.com** (hardcoded check in admin route guard)
-
-### `/admin` route (only for admin email)
-- **Dashboard**: total users, active today, voices posted, guest vs full breakdown
-- **Users tab**: search, view profile, disable account, delete posts, promote
-- **Broadcast tab**:
-  - Title + message input → send to all users (in-app banner + browser push)
-  - Stored in `broadcasts/{id}` — clients listen and show
-- **Tickets tab**:
-  - List of open support tickets
-  - Click → chat thread with user
-  - Mark resolved
-  - **Admin online indicator** — admin presence at `admin/presence` (RTDB onDisconnect)
-
-### User-side support
-- Profile → "Help / Support" button → opens chat
-- If admin online → realtime chat
-- If offline → "Aap queue me hain, ticket #123. Admin online hote hi jawaab milega" — store at `tickets/{ticketId}/messages`
-- Ticket creation auto on first message
-
-### Data model
-```
-admin/presence: { online: bool, lastSeen }
-broadcasts/{id}: { title, body, createdAt, sentBy }
-tickets/{ticketId}: { uid, name, status: "open"|"resolved", createdAt, lastMsgAt }
-tickets/{ticketId}/messages/{msgId}: { from: "user"|"admin", text, createdAt }
+## 12. RTDB structure
+```text
+heartable/
+  site/config: { name, tagline, favicon }
+  users/{uid}/
+    profile: { name, photo, bio, createdAt }
+    settings: { theme, onlineActivity }
+    blocks/{blockedUid}: true
+    roles: { admin: bool, banned: bool, warnings: n }
+    stats: { followers, following, likes, shares }
+    notifications/{nid}: { type, fromUid, postId, text, read, ts }
+  reports/{id}: { kind, targetId, reporterUid, reason, ts, status }
+  bans/{uid}: { reason, by, ts }
 ```
 
----
+## Execution order (single turn, but clean separation)
+1. Audio filters + Recorder iOS fix (lib level)
+2. RTDB helpers (`src/lib/settings.ts`, `src/lib/blocks.ts`, `src/lib/reports.ts`, `src/lib/notifications-store.ts`, `src/lib/admin-ext.ts`, `src/lib/verified.ts`)
+3. New routes: `/settings`, `/notifications`
+4. Profile cleanup + name edit + verified badge
+5. TikTok feed visualizer + filter chip + block filter
+6. DM friends-only + media + report
+7. Admin panel extensions (reports tab, ban, site config, promote)
+8. Story reactions notify + permanent story for admin
+9. Wire BottomNav + top-right gear
 
-## Firebase Console — Aapka Manual Kaam
+## Notes / trade-offs
+- Image uploads (avatar, chat image) → Supabase `voice` bucket (already public, working)
+- Theme = pure CSS class on `<html>`, persisted to RTDB on settings load
+- Verified tick = computed client-side from stats (no separate flag needed for milestone tiers)
+- Push notifications stay foreground-only (no SW/VAPID), already in place
 
-Phase 1 ke baad confirm karunga ki yeh sab apply hua:
-
-### 1. Authentication → Sign-in method
-- Email/Password: **Enable**
-- Google: **Enable** (project support email select karein)
-- Anonymous: **Enable**
-
-### 2. Realtime Database → Rules
-Main exact JSON dunga jo paste karna hai. Includes:
-- `voice/{uid}` — sirf owner write
-- `voice/{uid}/quota/{date}` — increment-only, max 4 for guest
-- `feed/{postId}` — auth read, owner write, likes/comments append rules
-- `comments`, `follows`, `tickets`, `broadcasts`, `admin/presence` — per-feature rules
-- Admin override via `auth.token.email == 'schoudhary11256@gmail.com'`
-
-### 3. Storage → Rules
-- `/voice/{uid}/**` — sirf owner upload, max 10MB, audio/* only
-
-### 4. Cloud Messaging
-- Web Push certificates → generate VAPID key pair → public key mujhe dena
-
-### 5. Custom Claims (admin)
-- Console me admin user ke liye custom claim set karna hoga — main aapko Firebase Functions ya gcloud command dunga. (Ya simpler: email-based check, jo low-security but quick hai. **Recommend: email check + RTDB rules me email match** — confirm karein.)
-
----
-
-## Recommended Order
-
-Main suggest karta hoon: **Phase 1 → 2 → 4 → 3** (push notifications last kyunki VAPID key chahiye).
-
-**Aap kya chahte hain?**
-
-A) Yes, plan accept — Phase 1 abhi shuru karo
-B) Pehle Phase 2 (short-voice feed) — wahi sabse important hai
-C) Sirf admin panel pehle banao
-D) Sab ek saath ek hi mega-commit me (risky, but possible — 30+ files change honge)
+Ready to build?
