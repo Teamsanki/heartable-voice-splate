@@ -151,3 +151,42 @@ export async function postMehfil(opts: {
   await bumpStreak(opts.uid);
   return node.key!;
 }
+
+/** Upload any image blob/file (avatar, chat photo) to Supabase voice bucket. */
+export async function uploadImage(uid: string, file: Blob, kind: string) {
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const ct = (file.type || "image/jpeg").split(";")[0];
+  const ext = ct.includes("png") ? "png" : ct.includes("webp") ? "webp" : "jpg";
+  const path = `${uid}/${kind}/${id}.${ext}`;
+  const { error } = await supabase.storage.from("voice").upload(path, file, { contentType: ct, upsert: true });
+  if (error) throw new Error(`Image upload fail: ${error.message}`);
+  const { data } = supabase.storage.from("voice").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/** Send a chat text/voice/image message between friends. */
+export async function postChat(opts: {
+  uid: string;
+  toUid: string;
+  text?: string;
+  imageUrl?: string;
+  voiceUrl?: string;
+  durationSec?: number;
+}) {
+  const tid = [opts.uid, opts.toUid].sort().join("_");
+  const node = push(dbRef(db, `chat/${tid}/messages`));
+  await set(node, {
+    uid: opts.uid,
+    to: opts.toUid,
+    text: opts.text || null,
+    imageUrl: opts.imageUrl || null,
+    voiceUrl: opts.voiceUrl || null,
+    durationSec: opts.durationSec || 0,
+    createdAt: Date.now(),
+  });
+  return node.key!;
+}
+
+export async function uploadChatVoice(uid: string, blob: Blob) {
+  return uploadBlob(uid, blob, "chat");
+}
