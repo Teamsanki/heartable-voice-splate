@@ -8,6 +8,9 @@ import { MobileShell } from "@/components/MobileShell";
 import { GuestExpiryCard } from "@/components/GuestExpiryCard";
 import { badgeFor } from "@/lib/streak";
 import { listenUserStats, listenUserPosts, type UserStats } from "@/lib/social";
+import { updateProfileName } from "@/lib/social";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { Settings as SettingsIcon, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Profile — Heartable" }] }),
@@ -15,7 +18,7 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
-  const { user, profile, isGuest, signOut, upgradeGuestEmail, upgradeGuestGoogle } = useAuth();
+  const { user, profile, isGuest, upgradeGuestEmail, upgradeGuestGoogle } = useAuth();
   const navigate = useNavigate();
   const [streak, setStreak] = useState<{ count: number; badge: string } | null>(null);
   const [stats, setStats] = useState<UserStats>({ followers: 0, following: 0, totalLikes: 0, totalShares: 0 });
@@ -24,6 +27,8 @@ function ProfilePage() {
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -63,12 +68,34 @@ function ProfilePage() {
 
   return (
     <MobileShell className="p-5 gap-5">
+        <div className="flex justify-end -mb-2">
+          <Link to="/settings" aria-label="Settings"
+            className="size-9 rounded-full bg-sunset-100 grid place-items-center">
+            <SettingsIcon className="size-4" />
+          </Link>
+        </div>
         <div className="flex items-center gap-4 mt-3">
           <div className="size-16 rounded-full bg-sunset-900 text-sunset-50 grid place-items-center text-2xl font-semibold overflow-hidden">
             {profile.photo ? <img src={profile.photo} className="w-full h-full object-cover" /> : profile.name.slice(0, 1).toUpperCase()}
           </div>
           <div>
-            <h1 className="font-serif italic text-3xl leading-none">{profile.name}</h1>
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} autoFocus
+                  className="px-2 py-1 rounded-lg bg-white ring-1 ring-foreground/10 text-lg outline-none" />
+                <button onClick={async () => {
+                  if (nameDraft.trim()) await updateProfileName(user.uid, nameDraft.trim());
+                  setEditingName(false);
+                }} className="text-xs font-semibold text-sunset-600">Save</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="font-serif italic text-3xl leading-none">{profile.name}</h1>
+                <VerifiedBadge uid={user.uid} size={18} />
+                <button onClick={() => { setNameDraft(profile.name); setEditingName(true); }}
+                  className="opacity-50 hover:opacity-100"><Pencil className="size-3.5" /></button>
+              </div>
+            )}
             <p className="text-xs opacity-60 mt-1">
               {isGuest ? "Guest account" : user.email || "Signed in"}
               {isAdmin && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-sunset-900 text-sunset-50 text-[9px] uppercase tracking-widest">Admin</span>}
@@ -166,13 +193,6 @@ function ProfilePage() {
           </div>
         )}
 
-        <Link
-          to="/support"
-          className="w-full py-3 rounded-full bg-white ring-1 ring-foreground/10 text-sm font-medium text-center"
-        >
-          💬 Help / Support
-        </Link>
-
         {isAdmin && (
           <Link
             to="/admin"
@@ -181,13 +201,9 @@ function ProfilePage() {
             Admin Panel →
           </Link>
         )}
-
-        <button
-          onClick={async () => { await signOut(); navigate({ to: "/login" }); }}
-          className="w-full py-3 rounded-full bg-sunset-100 text-sunset-900 text-sm font-medium hover:bg-sunset-200 transition"
-        >
-          Sign out
-        </button>
+        <Link to="/settings" className="w-full py-3 rounded-full bg-white ring-1 ring-foreground/10 text-sm font-medium text-center">
+          ⚙️ Settings, Help & Sign out
+        </Link>
 
         <BottomNav />
     </MobileShell>
