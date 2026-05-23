@@ -215,7 +215,7 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
               </p>
               <p className="text-[10px] opacity-70 flex items-center gap-1.5">
                 <span>{item.category || "voice"} · {Math.round(item.durationSec)}s</span>
-                {item.filter && item.filter !== "normal" && (
+                {item.filter && item.filter !== "None" && (
                   <span className="px-1.5 py-0.5 rounded-full bg-white/15 text-[9px] font-semibold uppercase tracking-wider">
                     ✨ {item.filter}
                   </span>
