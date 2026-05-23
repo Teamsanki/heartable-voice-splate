@@ -10,8 +10,8 @@ export function ThemeBridge() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  // Default dark on first paint
-  useEffect(() => { applyTheme("dark"); }, []);
+  // Default light on first paint (design palette is warm/light)
+  useEffect(() => { applyTheme("light"); }, []);
 
   // Site config — title + favicon
   useEffect(() => {

@@ -7,7 +7,7 @@ export type UserSettings = {
   onlineActivity: boolean;
 };
 
-const DEFAULTS: UserSettings = { theme: "dark", onlineActivity: true };
+const DEFAULTS: UserSettings = { theme: "light", onlineActivity: true };
 
 export function listenSettings(uid: string, cb: (s: UserSettings) => void) {
   return onValue(ref(db, `${VOICE_ROOT}/${uid}/settings`), (snap) => {

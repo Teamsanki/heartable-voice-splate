@@ -13,6 +13,7 @@ import { postFeed, postStory } from "@/lib/voice-api";
 import { consumeGuestQuota, getGuestQuota } from "@/lib/voice-api";
 import { shouldRemindStreakBreak, badgeFor } from "@/lib/streak";
 import { listenNotifs } from "@/lib/notifications-store";
+import { listenMyBlocks } from "@/lib/blocks";
 import { Bell } from "lucide-react";
 import type { VoiceFilter } from "@/lib/audio-filters";
 
@@ -51,6 +52,12 @@ function Home() {
   const [mode, setMode] = useState<"feed" | "story">("feed");
   const [quota, setQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null);
   const [unread, setUnread] = useState(0);
+  const [blocks, setBlocks] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!user) return;
+    return listenMyBlocks(user.uid, setBlocks);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -327,7 +334,7 @@ function Home() {
               </div>
             )}
 
-            {feed.map((item) => (
+            {feed.filter((it) => !blocks.has(it.uid)).map((item) => (
               <FeedCard key={item.id} item={item} />
             ))}
           </div>

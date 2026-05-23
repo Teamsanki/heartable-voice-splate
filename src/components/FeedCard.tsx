@@ -3,6 +3,8 @@ import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { VoicePlayer } from "./VoicePlayer";
 import { CommentSheet } from "./CommentSheet";
 import { FollowButton } from "./FollowButton";
+import { PostMenu } from "./PostMenu";
+import { VerifiedBadge } from "./VerifiedBadge";
 import { listenLiked, toggleLike, recordShare } from "@/lib/social";
 import { useAuth } from "@/lib/auth-context";
 import type { VoiceFilter } from "@/lib/audio-filters";
@@ -73,7 +75,10 @@ export function FeedCard({ item }: { item: FeedItem }) {
               )}
             </div>
             <div className="leading-tight">
-              <p className="text-xs font-semibold">{item.name}</p>
+              <p className="text-xs font-semibold flex items-center gap-1">
+                {item.name}
+                <VerifiedBadge uid={item.uid} size={11} />
+              </p>
               <p className="text-[10px] opacity-50">
                 {item.category || "voice"} · {item.filter}
               </p>
@@ -82,6 +87,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
           <div className="flex items-center gap-2">
             <FollowButton targetUid={item.uid} />
             <span className="text-[10px] font-medium opacity-40">{timeAgo(item.createdAt)}</span>
+            <PostMenu postId={item.id} authorUid={item.uid} />
           </div>
         </div>
 

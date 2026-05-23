@@ -6,6 +6,9 @@ import { useAuth } from "@/lib/auth-context";
 import { Recorder } from "@/components/Recorder";
 import { VoicePlayer } from "@/components/VoicePlayer";
 import { postSnap } from "@/lib/voice-api";
+import { areFriends } from "@/lib/social";
+import { isMutuallyBlocked } from "@/lib/blocks";
+import { submitReport } from "@/lib/reports";
 import type { VoiceFilter } from "@/lib/audio-filters";
 
 export const Route = createFileRoute("/dm/$uid")({
@@ -33,6 +36,7 @@ function DMThread() {
   const [peerName, setPeerName] = useState("Friend");
   const [snaps, setSnaps] = useState<Snap[]>([]);
   const [busy, setBusy] = useState(false);
+  const [gate, setGate] = useState<"loading" | "ok" | "not-friends" | "blocked">("loading");
 
   const threadId = user ? [user.uid, peerUid].sort().join("_") : null;
 
@@ -41,6 +45,17 @@ function DMThread() {
       if (s.val()) setPeerName(s.val());
     });
   }, [peerUid]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.uid === peerUid) { setGate("ok"); return; }
+    (async () => {
+      const blocked = await isMutuallyBlocked(user.uid, peerUid);
+      if (blocked) { setGate("blocked"); return; }
+      const friends = await areFriends(user.uid, peerUid);
+      setGate(friends ? "ok" : "not-friends");
+    })();
+  }, [user, peerUid]);
 
   useEffect(() => {
     if (!threadId || !user) return;
@@ -68,6 +83,25 @@ function DMThread() {
     return <div className="min-h-screen grid place-items-center">Login first</div>;
   }
 
+  if (gate === "blocked") {
+    return <div className="min-h-screen grid place-items-center p-6 text-center">
+      <div><p className="text-2xl font-serif italic">Heartable User</p>
+        <p className="text-sm opacity-60 mt-2">Ye chat available nahi.</p>
+        <button onClick={() => navigate({ to: "/dm" })} className="mt-4 underline text-sm">Back</button>
+      </div>
+    </div>;
+  }
+  if (gate === "not-friends") {
+    return <div className="min-h-screen grid place-items-center p-6 text-center">
+      <div className="max-w-sm">
+        <p className="text-4xl">🔒</p>
+        <p className="font-serif italic text-2xl mt-2">Friends only</p>
+        <p className="text-sm opacity-60 mt-2">DM khulne ke liye dono ko ek-doosre ko follow karna hoga.</p>
+        <button onClick={() => navigate({ to: "/dm" })} className="mt-4 underline text-sm">Back to messages</button>
+      </div>
+    </div>;
+  }
+
   return (
     <div className="min-h-screen bg-sunset-50 text-sunset-900">
       <div className="w-full sm:max-w-[480px] mx-auto min-h-[100dvh] flex flex-col p-6 gap-4 pb-32">
@@ -75,6 +109,22 @@ function DMThread() {
           <button onClick={() => navigate({ to: "/dm" })} className="text-sm opacity-60">
             ← Back
           </button>
+          <button
+            onClick={async () => {
+              const reason = prompt("Report this user/chat? Reason:");
+              if (!reason) return;
+              await submitReport({
+                kind: "chat",
+                targetId: threadId || peerUid,
+                targetUid: peerUid,
+                reporterUid: user.uid,
+                reporterName: profile.name,
+                reason: reason.slice(0, 200),
+              });
+              alert("Report bhej diya.");
+            }}
+            className="text-[11px] px-3 py-1 rounded-full bg-red-100 text-red-700"
+          >🚩 Report</button>
         </div>
         <h1 className="font-serif italic text-3xl">{peerName}</h1>
 

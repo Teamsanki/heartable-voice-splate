@@ -14,6 +14,10 @@ import {
   setAdminPresence,
   type Ticket,
 } from "@/lib/social";
+import { listenReports, setReportStatus, banUser, warnUser, type Report } from "@/lib/reports";
+import { listenSiteConfig, saveSiteConfig, type SiteConfig } from "@/lib/settings";
+import { deletePost } from "@/lib/social";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Heartable" }] }),
@@ -23,7 +27,9 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"stats" | "broadcast" | "tickets">("stats");
+  const [tab, setTab] = useState<"stats" | "broadcast" | "tickets" | "reports" | "site">("stats");
+  const [reports, setReports] = useState<Report[]>([]);
+  const [site, setSite] = useState<SiteConfig>({ name: "Heartable", tagline: "Voices of the Soul", favicon: null });
   const [users, setUsers] = useState(0);
   const [voices, setVoices] = useState(0);
   const [guests, setGuests] = useState(0);
@@ -68,7 +74,9 @@ function AdminPage() {
     });
     const u2 = onValue(ref(db, "feed"), (snap) => setVoices(snap.size));
     const u3 = listenAllTickets(setTickets);
-    return () => { u1(); u2(); u3(); };
+    const u4 = listenReports(setReports);
+    const u5 = listenSiteConfig(setSite);
+    return () => { u1(); u2(); u3(); u4(); u5(); };
   }, [isAdmin]);
 
   useEffect(() => {
@@ -112,16 +120,20 @@ function AdminPage() {
         <h1 className="font-serif italic text-3xl">Heartable HQ</h1>
       </div>
 
-      <div className="flex bg-sunset-100 rounded-full p-1 text-xs font-medium">
-        {(["stats", "broadcast", "tickets"] as const).map((t) => (
+      <div className="flex bg-sunset-100 rounded-full p-1 text-[11px] font-medium overflow-x-auto no-scrollbar">
+        {(["stats", "broadcast", "tickets", "reports", "site"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-1.5 rounded-full ${
+            className={`flex-1 whitespace-nowrap px-3 py-1.5 rounded-full ${
               tab === t ? "bg-sunset-900 text-sunset-50" : "text-sunset-900/70"
             }`}
           >
-            {t === "stats" ? "Stats" : t === "broadcast" ? "Broadcast" : `Tickets · ${tickets.filter(t=>t.status==="open").length}`}
+            {t === "stats" ? "Stats"
+              : t === "broadcast" ? "Broadcast"
+              : t === "tickets" ? `Tickets · ${tickets.filter(x => x.status === "open").length}`
+              : t === "reports" ? `Reports · ${reports.filter(r => r.status === "open").length}`
+              : "Site"}
           </button>
         ))}
       </div>
@@ -239,6 +251,75 @@ function AdminPage() {
       )}
 
       <BottomNav />
+      {tab === "reports" && (
+        <div className="space-y-2">
+          {reports.length === 0 && (
+            <p className="text-center text-sm opacity-50 py-10">Koi report nahi.</p>
+          )}
+          {reports.map((r) => (
+            <div key={r.id} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold">{r.kind.toUpperCase()} · {r.reporterName}</p>
+                  <p className="text-[10px] opacity-50">{new Date(r.createdAt).toLocaleString()}</p>
+                </div>
+                <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase ${r.status === "open" ? "bg-red-100 text-red-700" : "bg-sunset-100"}`}>{r.status}</span>
+              </div>
+              <p className="text-sm">{r.reason}</p>
+              {r.link && <Link to={r.link as any} className="text-[11px] underline opacity-70">Open target</Link>}
+              <div className="flex gap-2 flex-wrap pt-1">
+                {r.kind === "post" && (
+                  <button onClick={async () => { await deletePost(r.targetId); await setReportStatus(r.id, "actioned"); }}
+                    className="text-[11px] px-3 py-1 rounded-full bg-red-600 text-white">Delete post</button>
+                )}
+                {r.targetUid && (
+                  <>
+                    <button onClick={async () => {
+                      const reason = prompt("Warning message?") || "Please follow community guidelines.";
+                      await warnUser(r.targetUid!, reason, user!.uid);
+                      await setReportStatus(r.id, "actioned");
+                    }}
+                      className="text-[11px] px-3 py-1 rounded-full bg-amber-500 text-white">Warn</button>
+                    <button onClick={async () => {
+                      const reason = prompt("Ban reason?") || "Policy violation";
+                      if (!confirm("Ban this user?")) return;
+                      await banUser(r.targetUid!, reason, user!.uid);
+                      await setReportStatus(r.id, "actioned");
+                    }}
+                      className="text-[11px] px-3 py-1 rounded-full bg-black text-white">Ban</button>
+                  </>
+                )}
+                <button onClick={() => setReportStatus(r.id, "dismissed")}
+                  className="text-[11px] px-3 py-1 rounded-full bg-sunset-100">Dismiss</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "site" && (
+        <div className="space-y-3 bg-white rounded-2xl p-4 ring-1 ring-foreground/5">
+          <div>
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Site name</label>
+            <input value={site.name} onChange={(e) => setSite({ ...site, name: e.target.value })}
+              className="w-full mt-1 px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Tagline</label>
+            <input value={site.tagline} onChange={(e) => setSite({ ...site, tagline: e.target.value })}
+              className="w-full mt-1 px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Favicon URL</label>
+            <input value={site.favicon || ""} onChange={(e) => setSite({ ...site, favicon: e.target.value || null })}
+              placeholder="https://…/favicon.png"
+              className="w-full mt-1 px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+          </div>
+          <button onClick={async () => { await saveSiteConfig(site); alert("Saved!"); }}
+            className="w-full py-3 rounded-full bg-sunset-900 text-sunset-50 text-sm font-semibold">Save site config</button>
+        </div>
+      )}
+
     </MobileShell>
   );
 }
