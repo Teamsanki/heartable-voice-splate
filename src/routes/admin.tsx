@@ -251,6 +251,75 @@ function AdminPage() {
       )}
 
       <BottomNav />
+      {tab === "reports" && (
+        <div className="space-y-2">
+          {reports.length === 0 && (
+            <p className="text-center text-sm opacity-50 py-10">Koi report nahi.</p>
+          )}
+          {reports.map((r) => (
+            <div key={r.id} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold">{r.kind.toUpperCase()} · {r.reporterName}</p>
+                  <p className="text-[10px] opacity-50">{new Date(r.createdAt).toLocaleString()}</p>
+                </div>
+                <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase ${r.status === "open" ? "bg-red-100 text-red-700" : "bg-sunset-100"}`}>{r.status}</span>
+              </div>
+              <p className="text-sm">{r.reason}</p>
+              {r.link && <Link to={r.link as any} className="text-[11px] underline opacity-70">Open target</Link>}
+              <div className="flex gap-2 flex-wrap pt-1">
+                {r.kind === "post" && (
+                  <button onClick={async () => { await deletePost(r.targetId); await setReportStatus(r.id, "actioned"); }}
+                    className="text-[11px] px-3 py-1 rounded-full bg-red-600 text-white">Delete post</button>
+                )}
+                {r.targetUid && (
+                  <>
+                    <button onClick={async () => {
+                      const reason = prompt("Warning message?") || "Please follow community guidelines.";
+                      await warnUser(r.targetUid!, reason, user!.uid);
+                      await setReportStatus(r.id, "actioned");
+                    }}
+                      className="text-[11px] px-3 py-1 rounded-full bg-amber-500 text-white">Warn</button>
+                    <button onClick={async () => {
+                      const reason = prompt("Ban reason?") || "Policy violation";
+                      if (!confirm("Ban this user?")) return;
+                      await banUser(r.targetUid!, reason, user!.uid);
+                      await setReportStatus(r.id, "actioned");
+                    }}
+                      className="text-[11px] px-3 py-1 rounded-full bg-black text-white">Ban</button>
+                  </>
+                )}
+                <button onClick={() => setReportStatus(r.id, "dismissed")}
+                  className="text-[11px] px-3 py-1 rounded-full bg-sunset-100">Dismiss</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "site" && (
+        <div className="space-y-3 bg-white rounded-2xl p-4 ring-1 ring-foreground/5">
+          <div>
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Site name</label>
+            <input value={site.name} onChange={(e) => setSite({ ...site, name: e.target.value })}
+              className="w-full mt-1 px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Tagline</label>
+            <input value={site.tagline} onChange={(e) => setSite({ ...site, tagline: e.target.value })}
+              className="w-full mt-1 px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-widest opacity-60">Favicon URL</label>
+            <input value={site.favicon || ""} onChange={(e) => setSite({ ...site, favicon: e.target.value || null })}
+              placeholder="https://…/favicon.png"
+              className="w-full mt-1 px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+          </div>
+          <button onClick={async () => { await saveSiteConfig(site); alert("Saved!"); }}
+            className="w-full py-3 rounded-full bg-sunset-900 text-sunset-50 text-sm font-semibold">Save site config</button>
+        </div>
+      )}
+
     </MobileShell>
   );
 }
