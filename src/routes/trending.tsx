@@ -209,9 +209,17 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
               )}
             </div>
             <div className="leading-tight">
-              <p className="text-sm font-semibold">@{item.name}</p>
-              <p className="text-[10px] opacity-70">
-                {item.category || "voice"} · {Math.round(item.durationSec)}s
+              <p className="text-sm font-semibold flex items-center gap-1">
+                @{item.name}
+                <VerifiedBadge uid={item.uid} size={12} />
+              </p>
+              <p className="text-[10px] opacity-70 flex items-center gap-1.5">
+                <span>{item.category || "voice"} · {Math.round(item.durationSec)}s</span>
+                {item.filter && item.filter !== "normal" && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-white/15 text-[9px] font-semibold uppercase tracking-wider">
+                    ✨ {item.filter}
+                  </span>
+                )}
               </p>
             </div>
           </Link>
