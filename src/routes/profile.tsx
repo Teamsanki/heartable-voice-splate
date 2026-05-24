@@ -8,9 +8,10 @@ import { MobileShell } from "@/components/MobileShell";
 import { GuestExpiryCard } from "@/components/GuestExpiryCard";
 import { badgeFor } from "@/lib/streak";
 import { listenUserStats, listenUserPosts, type UserStats } from "@/lib/social";
-import { updateProfileName } from "@/lib/social";
+import { updateProfileName, updateProfilePhoto } from "@/lib/social";
+import { uploadImage } from "@/lib/voice-api";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { Settings as SettingsIcon, Pencil } from "lucide-react";
+import { Settings as SettingsIcon, Pencil, Camera } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Profile — Heartable" }] }),
@@ -29,6 +30,7 @@ function ProfilePage() {
   const [err, setErr] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -66,6 +68,21 @@ function ProfilePage() {
     finally { setBusy(false); }
   };
 
+  const onPickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f || !user) return;
+    setUploadingPhoto(true);
+    try {
+      const url = await uploadImage(user.uid, f, "avatars");
+      await updateProfilePhoto(user.uid, url);
+    } catch (err: any) {
+      alert(err?.message || "Upload fail");
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = "";
+    }
+  };
+
   return (
     <MobileShell className="p-5 gap-5">
         <div className="flex justify-end -mb-2">
@@ -75,9 +92,14 @@ function ProfilePage() {
           </Link>
         </div>
         <div className="flex items-center gap-4 mt-3">
-          <div className="size-16 rounded-full bg-sunset-900 text-sunset-50 grid place-items-center text-2xl font-semibold overflow-hidden">
+          <label className="relative size-16 rounded-full bg-sunset-900 text-sunset-50 grid place-items-center text-2xl font-semibold overflow-hidden cursor-pointer group">
             {profile.photo ? <img src={profile.photo} className="w-full h-full object-cover" /> : profile.name.slice(0, 1).toUpperCase()}
-          </div>
+            <span className="absolute inset-0 bg-black/40 grid place-items-center opacity-0 group-hover:opacity-100 transition">
+              <Camera className="size-5" />
+            </span>
+            {uploadingPhoto && <span className="absolute inset-0 bg-black/60 grid place-items-center text-[10px]">…</span>}
+            <input type="file" accept="image/*" onChange={onPickPhoto} className="hidden" />
+          </label>
           <div>
             {editingName ? (
               <div className="flex items-center gap-2">
@@ -201,9 +223,6 @@ function ProfilePage() {
             Admin Panel →
           </Link>
         )}
-        <Link to="/settings" className="w-full py-3 rounded-full bg-white ring-1 ring-foreground/10 text-sm font-medium text-center">
-          ⚙️ Settings, Help & Sign out
-        </Link>
 
         <BottomNav />
     </MobileShell>
