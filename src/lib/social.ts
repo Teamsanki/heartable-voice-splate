@@ -234,12 +234,61 @@ export type Broadcast = {
   title: string;
   body: string;
   createdAt: number;
+  button?: { label: string; url: string } | null;
+  poll?: { question: string; options: string[] } | null;
 };
 
-export async function sendBroadcast(title: string, body: string, byUid: string) {
+export async function sendBroadcast(
+  title: string,
+  body: string,
+  byUid: string,
+  extras?: { button?: { label: string; url: string } | null; poll?: { question: string; options: string[] } | null },
+) {
   const node = push(ref(db, "broadcasts"));
-  await set(node, { title, body, createdAt: Date.now(), sentBy: byUid });
+  await set(node, {
+    title,
+    body,
+    createdAt: Date.now(),
+    sentBy: byUid,
+    button: extras?.button || null,
+    poll: extras?.poll || null,
+  });
   return node.key!;
+}
+
+/** Cast / change vote on a broadcast poll. One vote per uid. */
+export async function votePoll(broadcastId: string, uid: string, optionIndex: number) {
+  await set(ref(db, `broadcastVotes/${broadcastId}/${uid}`), optionIndex);
+}
+
+export function listenPollResults(
+  broadcastId: string,
+  cb: (res: { counts: Record<number, number>; myVote: number | null; total: number }, uid?: string) => void,
+  myUid?: string,
+) {
+  return onValue(ref(db, `broadcastVotes/${broadcastId}`), (snap) => {
+    const counts: Record<number, number> = {};
+    let total = 0;
+    let myVote: number | null = null;
+    snap.forEach((c) => {
+      const v = c.val() as number;
+      counts[v] = (counts[v] || 0) + 1;
+      total++;
+      if (myUid && c.key === myUid) myVote = v;
+    });
+    cb({ counts, myVote, total });
+  });
+}
+
+/** Collect all user emails for admin mail blast. */
+export async function listAllUserEmails(): Promise<string[]> {
+  const snap = await get(ref(db, VOICE_ROOT));
+  const emails: string[] = [];
+  snap.forEach((c) => {
+    const e = c.child("profile/email").val();
+    if (e && typeof e === "string") emails.push(e);
+  });
+  return Array.from(new Set(emails));
 }
 
 export function listenLatestBroadcast(cb: (b: Broadcast | null) => void) {

@@ -4,6 +4,7 @@ import { listenLatestBroadcast } from "@/lib/social";
 import { onValue, ref } from "firebase/database";
 import { db, VOICE_ROOT } from "@/lib/firebase";
 import { shouldRemindStreakBreak } from "@/lib/streak";
+import { pushNotif } from "@/lib/notifications-store";
 import {
   markBroadcastNotified,
   maybeNotifyStreakBreak,
@@ -41,15 +42,23 @@ export function NotificationsBridge() {
     };
   }, []);
 
-  // Broadcasts → notification
+  // Broadcasts → browser notification + in-app feed
   useEffect(() => {
     return listenLatestBroadcast((latest) => {
       if (!latest) return;
       if (wasBroadcastNotified(latest.id)) return;
       showNotification(`📣 ${latest.title}`, latest.body, `bc-${latest.id}`);
       markBroadcastNotified(latest.id);
+      // Fan-out into this user's own notification feed (self-write, RLS-safe).
+      if (user?.uid) {
+        pushNotif(user.uid, {
+          kind: "admin",
+          fromName: "Heartable",
+          text: `${latest.title} — ${latest.body}`,
+        }).catch(() => {});
+      }
     });
-  }, []);
+  }, [user]);
 
   // Streak → daily nudge
   useEffect(() => {

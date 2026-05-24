@@ -31,7 +31,7 @@ export function showNotification(title: string, body?: string, tag?: string) {
     new Notification(title, {
       body,
       tag,
-      icon: "/favicon.ico",
+      icon: "/favicon.svg",
     });
   } catch {
     /* some browsers (iOS Safari) throw */

@@ -13,6 +13,7 @@ import {
   sendTicketMsg,
   setAdminPresence,
   type Ticket,
+  listAllUserEmails,
 } from "@/lib/social";
 import { listenReports, setReportStatus, banUser, warnUser, type Report } from "@/lib/reports";
 import { listenSiteConfig, saveSiteConfig, type SiteConfig } from "@/lib/settings";
@@ -41,6 +42,11 @@ function AdminPage() {
   const [bTitle, setBTitle] = useState("");
   const [bBody, setBBody] = useState("");
   const [bBusy, setBBusy] = useState(false);
+  const [bMode, setBMode] = useState<"none" | "button" | "poll">("none");
+  const [bBtnLabel, setBBtnLabel] = useState("");
+  const [bBtnUrl, setBBtnUrl] = useState("");
+  const [bPollQ, setBPollQ] = useState("");
+  const [bPollOpts, setBPollOpts] = useState<string[]>(["", ""]);
 
   const isAdmin = user?.email === ADMIN_EMAIL;
 
@@ -101,10 +107,28 @@ function AdminPage() {
     if (!bTitle.trim() || !bBody.trim()) return;
     setBBusy(true);
     try {
-      await sendBroadcast(bTitle.trim(), bBody.trim(), user!.uid);
-      setBTitle(""); setBBody("");
+      const extras: any = {};
+      if (bMode === "button" && bBtnUrl.trim()) {
+        extras.button = { label: bBtnLabel.trim() || "Open", url: bBtnUrl.trim() };
+      }
+      if (bMode === "poll" && bPollQ.trim()) {
+        const opts = bPollOpts.map((o) => o.trim()).filter(Boolean);
+        if (opts.length >= 2) extras.poll = { question: bPollQ.trim(), options: opts };
+      }
+      await sendBroadcast(bTitle.trim(), bBody.trim(), user!.uid, extras);
+      setBTitle(""); setBBody(""); setBBtnLabel(""); setBBtnUrl(""); setBPollQ(""); setBPollOpts(["", ""]); setBMode("none");
       alert("Broadcast sent!");
     } finally { setBBusy(false); }
+  };
+
+  const emailBlast = async () => {
+    if (!bTitle.trim() || !bBody.trim()) { alert("Title + body daal pehle"); return; }
+    const emails = await listAllUserEmails();
+    if (emails.length === 0) { alert("Koi user email registered nahi."); return; }
+    const subject = encodeURIComponent(bTitle.trim());
+    const body = encodeURIComponent(`${bBody.trim()}\n\n— Heartable Team`);
+    // BCC keeps recipients private. mailto link opens default mail client.
+    window.location.href = `mailto:?bcc=${emails.join(",")}&subject=${subject}&body=${body}`;
   };
 
   const sendReply = async () => {
@@ -170,12 +194,51 @@ function AdminPage() {
             rows={3}
             className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none resize-none"
           />
+          <div className="flex gap-1 text-[11px] font-medium">
+            {(["none", "button", "poll"] as const).map((m) => (
+              <button key={m} onClick={() => setBMode(m)}
+                className={`flex-1 py-1.5 rounded-full ${bMode === m ? "bg-sunset-900 text-sunset-50" : "bg-sunset-50 ring-1 ring-foreground/10"}`}>
+                {m === "none" ? "Text only" : m === "button" ? "+ Button" : "+ Poll (MCQ)"}
+              </button>
+            ))}
+          </div>
+          {bMode === "button" && (
+            <div className="space-y-2">
+              <input value={bBtnLabel} onChange={(e) => setBBtnLabel(e.target.value)} placeholder="Button label (e.g. Give feedback)"
+                className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+              <input value={bBtnUrl} onChange={(e) => setBBtnUrl(e.target.value)} placeholder="https://forms.google.com/…"
+                className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+            </div>
+          )}
+          {bMode === "poll" && (
+            <div className="space-y-2">
+              <input value={bPollQ} onChange={(e) => setBPollQ(e.target.value)} placeholder="Poll question"
+                className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+              {bPollOpts.map((o, i) => (
+                <input key={i} value={o} onChange={(e) => { const c = [...bPollOpts]; c[i] = e.target.value; setBPollOpts(c); }}
+                  placeholder={`Option ${i + 1}`}
+                  className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+              ))}
+              <div className="flex gap-2">
+                {bPollOpts.length < 5 && (
+                  <button onClick={() => setBPollOpts([...bPollOpts, ""])} className="text-[11px] px-3 py-1 rounded-full bg-sunset-100">+ Option</button>
+                )}
+                {bPollOpts.length > 2 && (
+                  <button onClick={() => setBPollOpts(bPollOpts.slice(0, -1))} className="text-[11px] px-3 py-1 rounded-full bg-sunset-100">– Option</button>
+                )}
+              </div>
+            </div>
+          )}
           <button
             onClick={broadcast}
             disabled={bBusy || !bTitle.trim() || !bBody.trim()}
             className="w-full py-3 rounded-full bg-sunset-900 text-sunset-50 text-sm font-semibold disabled:opacity-50"
           >
-            📣 Send to all users
+            📣 Send in-app + browser push
+          </button>
+          <button onClick={emailBlast}
+            className="w-full py-2.5 rounded-full bg-white ring-1 ring-foreground/10 text-xs font-medium">
+            ✉️ Also email to all users (opens mail client, BCC)
           </button>
         </div>
       )}

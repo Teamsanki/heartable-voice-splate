@@ -48,10 +48,11 @@ async function ensureProfile(u: User, overrides?: Partial<Profile>): Promise<Pro
   const snap = await get(pRef);
   if (snap.exists()) {
     const existing = snap.val() as Profile;
-    if (overrides) {
-      const merged = { ...existing, ...overrides };
-      await update(pRef, overrides);
-      return merged;
+    const emailPatch = u.email && (existing as any).email !== u.email ? { email: u.email } : {};
+    const patch = { ...(overrides || {}), ...emailPatch };
+    if (Object.keys(patch).length) {
+      await update(pRef, patch);
+      return { ...existing, ...patch };
     }
     return existing;
   }
@@ -63,7 +64,7 @@ async function ensureProfile(u: User, overrides?: Partial<Profile>): Promise<Pro
     guestExpiresAt: u.isAnonymous ? Date.now() + SEVEN_DAYS : null,
     ...overrides,
   };
-  await set(pRef, fresh);
+  await set(pRef, { ...fresh, email: u.email || null });
   return fresh;
 }
 
