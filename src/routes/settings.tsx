@@ -7,7 +7,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { BottomNav } from "@/components/BottomNav";
 import { listenSettings, saveSettings, type Theme } from "@/lib/settings";
 import { listenMyBlocks, unblockUser } from "@/lib/blocks";
-import { ChevronLeft, Moon, Sun, Bell, Shield, HelpCircle, LogOut, FileText, UserX } from "lucide-react";
+import { ChevronLeft, Moon, Sun, Bell, HelpCircle, LogOut, FileText, UserX, BookOpen } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — Heartable" }] }),
@@ -90,10 +90,8 @@ function SettingsPage() {
       <Section title="Support">
         <LinkRow to="/support" icon={<HelpCircle className="size-4" />} label="Help & Support" />
         <LinkRow to="/notifications" icon={<Bell className="size-4" />} label="Notifications" />
-        <a href="#privacy" onClick={(e) => { e.preventDefault(); alert(PRIVACY); }}
-          className="flex items-center gap-3 px-3 py-3 bg-white rounded-xl ring-1 ring-foreground/5">
-          <FileText className="size-4" /> <span className="text-sm">Privacy Policy</span>
-        </a>
+        <LinkRow to="/guidelines" icon={<BookOpen className="size-4" />} label="Community Guidelines" />
+        <LinkRow to="/privacy" icon={<FileText className="size-4" />} label="Privacy Policy" />
       </Section>
 
       <button onClick={async () => { await signOut(); navigate({ to: "/login" }); }}
@@ -137,13 +135,3 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
     </button>
   );
 }
-
-const PRIVACY = `Heartable Privacy Policy (short)
-
-• Hum tumhari voices Supabase storage me rakhte hain, baaki data Firebase Realtime DB me.
-• Tumhari profile (name, photo), settings, blocks, notifications sirf tumhare user-folder me save hote hain.
-• Online activity off karne par friends ko tumhara last-seen show nahi hoga.
-• Block kiye gaye users ko tumhari posts/DP/name nahi dikhega.
-• Admin sirf reports aur user moderation kar sakta hai.
-• Data delete ke liye Help me ticket banao.
-`;
