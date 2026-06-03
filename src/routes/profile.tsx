@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { onValue, ref } from "firebase/database";
-import { db, VOICE_ROOT, ADMIN_EMAIL } from "@/lib/firebase";
+import { db, VOICE_ROOT } from "@/lib/firebase";
+import { isFounder } from "@/lib/roles";
+import { UserBadges } from "@/components/UserBadges";
 import { useAuth } from "@/lib/auth-context";
 import { BottomNav } from "@/components/BottomNav";
 import { MobileShell } from "@/components/MobileShell";
@@ -10,7 +12,7 @@ import { badgeFor } from "@/lib/streak";
 import { listenUserStats, listenUserPosts, type UserStats } from "@/lib/social";
 import { updateProfileName, updateProfilePhoto } from "@/lib/social";
 import { uploadImage } from "@/lib/voice-api";
-import { VerifiedBadge } from "@/components/VerifiedBadge";
+
 import { Settings as SettingsIcon, Pencil, Camera } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
@@ -52,7 +54,7 @@ function ProfilePage() {
 
   const days = streak?.count || 0;
   const badge = streak?.badge || badgeFor(days);
-  const isAdmin = user.email === ADMIN_EMAIL;
+  const isAdmin = isFounder(user.email);
 
   const upgradeEmail = async () => {
     setBusy(true); setErr(null);
@@ -113,14 +115,13 @@ function ProfilePage() {
             ) : (
               <div className="flex items-center gap-2">
                 <h1 className="font-serif italic text-3xl leading-none">{profile.name}</h1>
-                <VerifiedBadge uid={user.uid} size={18} />
+                <UserBadges uid={user.uid} email={user.email} size={14} />
                 <button onClick={() => { setNameDraft(profile.name); setEditingName(true); }}
                   className="opacity-50 hover:opacity-100"><Pencil className="size-3.5" /></button>
               </div>
             )}
             <p className="text-xs opacity-60 mt-1">
               {isGuest ? "Guest account" : user.email || "Signed in"}
-              {isAdmin && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-sunset-900 text-sunset-50 text-[9px] uppercase tracking-widest">Admin</span>}
             </p>
           </div>
         </div>

@@ -12,12 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrendingRouteImport } from './routes/trending'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as RecordRouteImport } from './routes/record'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MehfilRouteImport } from './routes/mehfil'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as DmRouteImport } from './routes/dm'
 import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -26,6 +29,8 @@ import { Route as StoryIdRouteImport } from './routes/story.$id'
 import { Route as PIdRouteImport } from './routes/p.$id'
 import { Route as MehfilIdRouteImport } from './routes/mehfil.$id'
 import { Route as DmUidRouteImport } from './routes/dm.$uid'
+import { Route as ApiPublicRefreshMilestoneRouteImport } from './routes/api/public/refresh-milestone'
+import { Route as ApiPublicNotifyEmailRouteImport } from './routes/api/public/notify-email'
 
 const TrendingRoute = TrendingRouteImport.update({
   id: '/trending',
@@ -42,6 +47,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordRoute = RecordRouteImport.update({
   id: '/record',
   path: '/record',
@@ -50,6 +60,11 @@ const RecordRoute = RecordRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -70,6 +85,11 @@ const LoginRoute = LoginRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidelinesRoute = GuidelinesRouteImport.update({
+  id: '/guidelines',
+  path: '/guidelines',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DmRoute = DmRouteImport.update({
@@ -112,18 +132,32 @@ const DmUidRoute = DmUidRouteImport.update({
   path: '/$uid',
   getParentRoute: () => DmRoute,
 } as any)
+const ApiPublicRefreshMilestoneRoute =
+  ApiPublicRefreshMilestoneRouteImport.update({
+    id: '/api/public/refresh-milestone',
+    path: '/api/public/refresh-milestone',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicNotifyEmailRoute = ApiPublicNotifyEmailRouteImport.update({
+  id: '/api/public/notify-email',
+  path: '/api/public/notify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
+  '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -131,18 +165,23 @@ export interface FileRoutesByFullPath {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
+  '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
+  '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -150,6 +189,8 @@ export interface FileRoutesByTo {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
+  '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -157,12 +198,15 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
+  '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -170,6 +214,8 @@ export interface FileRoutesById {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
+  '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,12 +224,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/banned'
     | '/dm'
+    | '/guidelines'
     | '/home'
     | '/login'
     | '/mehfil'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/record'
+    | '/rewards'
     | '/settings'
     | '/support'
     | '/trending'
@@ -191,18 +240,23 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/api/public/notify-email'
+    | '/api/public/refresh-milestone'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/banned'
     | '/dm'
+    | '/guidelines'
     | '/home'
     | '/login'
     | '/mehfil'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/record'
+    | '/rewards'
     | '/settings'
     | '/support'
     | '/trending'
@@ -210,18 +264,23 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/api/public/notify-email'
+    | '/api/public/refresh-milestone'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/banned'
     | '/dm'
+    | '/guidelines'
     | '/home'
     | '/login'
     | '/mehfil'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/record'
+    | '/rewards'
     | '/settings'
     | '/support'
     | '/trending'
@@ -229,6 +288,8 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/api/public/notify-email'
+    | '/api/public/refresh-milestone'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,17 +297,22 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   BannedRoute: typeof BannedRoute
   DmRoute: typeof DmRouteWithChildren
+  GuidelinesRoute: typeof GuidelinesRoute
   HomeRoute: typeof HomeRoute
   LoginRoute: typeof LoginRoute
   MehfilRoute: typeof MehfilRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RecordRoute: typeof RecordRoute
+  RewardsRoute: typeof RewardsRoute
   SettingsRoute: typeof SettingsRoute
   SupportRoute: typeof SupportRoute
   TrendingRoute: typeof TrendingRoute
   PIdRoute: typeof PIdRoute
   StoryIdRoute: typeof StoryIdRoute
+  ApiPublicNotifyEmailRoute: typeof ApiPublicNotifyEmailRoute
+  ApiPublicRefreshMilestoneRoute: typeof ApiPublicRefreshMilestoneRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/record': {
       id: '/record'
       path: '/record'
@@ -284,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -312,6 +392,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guidelines': {
+      id: '/guidelines'
+      path: '/guidelines'
+      fullPath: '/guidelines'
+      preLoaderRoute: typeof GuidelinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dm': {
@@ -370,6 +457,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DmUidRouteImport
       parentRoute: typeof DmRoute
     }
+    '/api/public/refresh-milestone': {
+      id: '/api/public/refresh-milestone'
+      path: '/api/public/refresh-milestone'
+      fullPath: '/api/public/refresh-milestone'
+      preLoaderRoute: typeof ApiPublicRefreshMilestoneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/notify-email': {
+      id: '/api/public/notify-email'
+      path: '/api/public/notify-email'
+      fullPath: '/api/public/notify-email'
+      preLoaderRoute: typeof ApiPublicNotifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -399,28 +500,23 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   BannedRoute: BannedRoute,
   DmRoute: DmRouteWithChildren,
+  GuidelinesRoute: GuidelinesRoute,
   HomeRoute: HomeRoute,
   LoginRoute: LoginRoute,
   MehfilRoute: MehfilRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RecordRoute: RecordRoute,
+  RewardsRoute: RewardsRoute,
   SettingsRoute: SettingsRoute,
   SupportRoute: SupportRoute,
   TrendingRoute: TrendingRoute,
   PIdRoute: PIdRoute,
   StoryIdRoute: StoryIdRoute,
+  ApiPublicNotifyEmailRoute: ApiPublicNotifyEmailRoute,
+  ApiPublicRefreshMilestoneRoute: ApiPublicRefreshMilestoneRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -11,6 +11,13 @@ import {
 } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
 import { pushNotif } from "./notifications-store";
+import { sendEmailNotify } from "./email-notify";
+
+async function emailFor(uid: string): Promise<string | null> {
+  const s = await get(ref(db, `${VOICE_ROOT}/${uid}/profile/email`));
+  const v = s.val();
+  return v && typeof v === "string" ? v : null;
+}
 
 /** Toggle like on a feed post. Returns new state. */
 export async function toggleLike(postId: string, uid: string) {
@@ -43,6 +50,8 @@ export async function toggleLike(postId: string, uid: string) {
         postId,
         text: "liked your voice",
       });
+      const e = await emailFor(owner);
+      if (e) sendEmailNotify({ to: e, kind: "like", fromName: meSnap.val() || "Someone", text: "liked your voice", link: `${location.origin}/p/${postId}` });
     }
   }
   return true;
@@ -71,6 +80,8 @@ export async function addComment(
       postId,
       text: text.slice(0, 80),
     });
+    const e = await emailFor(owner);
+    if (e) sendEmailNotify({ to: e, kind: "comment", fromName: name, text: `commented: ${text.slice(0, 80)}`, link: `${location.origin}/p/${postId}` });
   }
   return node.key!;
 }
@@ -118,6 +129,8 @@ export async function follow(followerUid: string, followeeUid: string) {
     fromName: meSnap.val() || "Someone",
     text: "followed you",
   });
+  const e = await emailFor(followeeUid);
+  if (e) sendEmailNotify({ to: e, kind: "follow", fromName: meSnap.val() || "Someone", text: "followed you on Heartable", link: `${location.origin}/profile` });
 }
 
 export async function unfollow(followerUid: string, followeeUid: string) {

@@ -86,7 +86,7 @@ function DMThread() {
   if (gate === "blocked") {
     return <div className="min-h-screen grid place-items-center p-6 text-center">
       <div><p className="text-2xl font-serif italic">Heartable User</p>
-        <p className="text-sm opacity-60 mt-2">Ye chat available nahi.</p>
+        <p className="text-sm opacity-60 mt-2">This chat is not available.</p>
         <button onClick={() => navigate({ to: "/dm" })} className="mt-4 underline text-sm">Back</button>
       </div>
     </div>;
@@ -96,7 +96,7 @@ function DMThread() {
       <div className="max-w-sm">
         <p className="text-4xl">🔒</p>
         <p className="font-serif italic text-2xl mt-2">Friends only</p>
-        <p className="text-sm opacity-60 mt-2">DM khulne ke liye dono ko ek-doosre ko follow karna hoga.</p>
+        <p className="text-sm opacity-60 mt-2">You and this user must follow each other to chat.</p>
         <button onClick={() => navigate({ to: "/dm" })} className="mt-4 underline text-sm">Back to messages</button>
       </div>
     </div>;
@@ -111,7 +111,7 @@ function DMThread() {
           </button>
           <button
             onClick={async () => {
-              const reason = prompt("Report this user/chat? Reason:");
+              const reason = prompt("Report this user/chat? Please tell us why:");
               if (!reason) return;
               await submitReport({
                 kind: "chat",
@@ -121,7 +121,7 @@ function DMThread() {
                 reporterName: profile.name,
                 reason: reason.slice(0, 200),
               });
-              alert("Report bhej diya.");
+              alert("Report submitted.");
             }}
             className="text-[11px] px-3 py-1 rounded-full bg-red-100 text-red-700"
           >🚩 Report</button>
@@ -151,7 +151,7 @@ function DMThread() {
         <div className="space-y-3 mt-2">
           {snaps.length === 0 && (
             <p className="text-center text-sm opacity-50 py-6">
-              Pehli awaaz tu bhej.
+              Send the first voice note.
             </p>
           )}
           {snaps.map((s) => {
@@ -164,7 +164,7 @@ function DMThread() {
                 }`}
               >
                 <p className="text-[10px] opacity-50 mb-2">
-                  {fromMe ? "You" : s.name} · {s.filter} · sun ke gayab
+                  {fromMe ? "You" : s.name} · {s.filter} · disappears once heard
                 </p>
                 <VoicePlayer
                   url={s.url}
