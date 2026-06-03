@@ -494,6 +494,144 @@ function AdminPage() {
           </div>
           <button onClick={async () => { await saveSiteConfig(site); alert("Saved!"); }}
             className="w-full py-3 rounded-full bg-sunset-900 text-sunset-50 text-sm font-semibold">Save site config</button>
+
+          <div className="pt-2 border-t border-foreground/5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold flex items-center gap-2">Beta mode <BetaBadge /></p>
+              <p className="text-[11px] opacity-60">Shows a Beta badge across the app.</p>
+            </div>
+            <button onClick={() => setBeta(!beta)}
+              className={`w-12 h-7 rounded-full p-0.5 transition ${beta ? "bg-fuchsia-600" : "bg-foreground/15"}`}>
+              <div className={`size-6 rounded-full bg-white transition ${beta ? "translate-x-5" : ""}`} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tab === "admins" && founder && (
+        <div className="space-y-3">
+          <div className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
+            <p className="text-sm font-semibold">Add an admin</p>
+            <input value={newAdminEmail} onChange={(e) => setNewAdminEmail(e.target.value)} placeholder="user@email.com"
+              className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+            <select value={newAdminRole} onChange={(e) => setNewAdminRole(e.target.value as AdminRole)}
+              className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none">
+              {(Object.keys(ROLE_LABEL) as AdminRole[]).map((r) => (<option key={r} value={r}>{ROLE_LABEL[r]}</option>))}
+            </select>
+            <button onClick={handleAddAdmin}
+              className="w-full py-2.5 rounded-full bg-sunset-900 text-sunset-50 text-sm font-semibold">+ Add admin</button>
+          </div>
+
+          {admins.length === 0 && (<p className="text-center text-xs opacity-50 py-6">No admins yet.</p>)}
+          {admins.map((a) => (
+            <div key={a.uid} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold">{a.name}</p>
+                  <p className="text-[10px] opacity-50">{a.email}</p>
+                </div>
+                <span className="text-[10px] uppercase tracking-widest bg-sunset-900 text-sunset-50 px-2 py-0.5 rounded-full">{ROLE_LABEL[a.role]}</span>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {(Object.keys(ROLE_LABEL) as AdminRole[]).map((r) => (
+                  <button key={r} onClick={() => updateAdminRole(a.uid, r)}
+                    className={`text-[10px] px-2 py-1 rounded-full ${a.role === r ? "bg-sunset-900 text-sunset-50" : "bg-sunset-100"}`}>
+                    {ROLE_LABEL[r]}
+                  </button>
+                ))}
+                <button onClick={async () => { if (confirm(`Remove ${a.name} from admins?`)) await removeAdmin(a.uid); }}
+                  className="text-[10px] px-2 py-1 rounded-full bg-red-600 text-white ml-auto">Remove</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "rewards" && (
+        <div className="space-y-3">
+          <div className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5">
+            <p className="text-sm font-semibold mb-1">This week's milestone</p>
+            {milestone ? (
+              <>
+                <p className="text-xs opacity-70 mb-2">{milestone.giftPool}</p>
+                <ul className="text-[11px] space-y-1 opacity-80">
+                  {milestone.tasks.map((t) => (<li key={t.id}>• {t.title} ({t.target} {t.metric}) — {t.rewardLabel}</li>))}
+                </ul>
+              </>
+            ) : (<p className="text-xs opacity-50">No milestone yet.</p>)}
+            <button onClick={refreshMilestone} disabled={milestoneBusy}
+              className="mt-3 w-full py-2.5 rounded-full bg-sunset-900 text-sunset-50 text-xs font-semibold disabled:opacity-50">
+              {milestoneBusy ? "Generating with AI…" : "✨ Regenerate via AI (OpenRouter)"}
+            </button>
+            <p className="text-[10px] opacity-50 mt-2">Auto-refreshes every Sunday at midnight.</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
+            <p className="text-sm font-semibold">Create a giveaway</p>
+            <input value={gTitle} onChange={(e) => setGTitle(e.target.value)} placeholder="Title (e.g. ₹100 Amazon voucher)"
+              className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+            <input value={gDesc} onChange={(e) => setGDesc(e.target.value)} placeholder="Description"
+              className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+            <div className="flex gap-2">
+              <input value={gPrize} onChange={(e) => setGPrize(e.target.value)} placeholder="Prize (e.g. ₹100)"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+              <input type="number" min={1} max={30} value={gDays} onChange={(e) => setGDays(Number(e.target.value) || 7)}
+                className="w-20 px-3 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
+            </div>
+            <button onClick={newGiveaway}
+              className="w-full py-2.5 rounded-full bg-sunset-600 text-white text-sm font-semibold">+ Launch</button>
+          </div>
+
+          {giveaways.map((g) => (
+            <div key={g.id} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5">
+              <p className="text-sm font-semibold">{g.title} <span className="text-[10px] opacity-50">· {Object.keys(g.entries || {}).length} entries</span></p>
+              <p className="text-[11px] opacity-70">{g.description}</p>
+              {g.winner ? (<p className="text-[11px] text-emerald-700 mt-1">🏆 Winner: {g.winner.name}</p>) : (
+                <button onClick={async () => { const w = await pickGiveawayWinner(g.id); alert(w ? `Winner: ${w.name}` : "No entries"); }}
+                  className="mt-2 text-[11px] px-3 py-1 rounded-full bg-sunset-900 text-sunset-50">Pick winner</button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "chat" && (
+        <div className="space-y-3">
+          {founder && (
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+              {admins.length === 0 && <p className="text-xs opacity-50">No admins yet to chat with.</p>}
+              {admins.map((a) => (
+                <button key={a.uid} onClick={() => setChatPeerUid(a.uid)}
+                  className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap ${chatPeerUid === a.uid ? "bg-sunset-900 text-sunset-50" : "bg-sunset-100"}`}>
+                  {a.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {!founder && (
+            <p className="text-xs opacity-60">Direct line with the Founder. Use it to escalate issues, share moderation notes, or ask for help.</p>
+          )}
+          <div className="bg-white rounded-2xl ring-1 ring-foreground/5 flex flex-col h-[55vh]">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {chatMsgs.length === 0 && <p className="text-center text-xs opacity-50 py-10">{founder && !chatPeerUid ? "Pick an admin above to start chatting." : "Say hello to start the conversation."}</p>}
+              {chatMsgs.map((m) => {
+                const mine = m.from === user!.uid;
+                return (
+                  <div key={m.id} className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${mine ? "ml-auto bg-sunset-600 text-white" : "mr-auto bg-sunset-100"}`}>
+                    <p className="text-[9px] uppercase tracking-widest opacity-70 mb-0.5">{m.fromName}</p>
+                    {m.text}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="p-2 border-t border-foreground/5 flex gap-2">
+              <input value={chatDraft} onChange={(e) => setChatDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendChat()}
+                placeholder={founder && !chatPeerUid ? "Pick an admin first…" : "Type message…"} disabled={founder && !chatPeerUid}
+                className="flex-1 px-3 py-2 rounded-full bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none disabled:opacity-50" />
+              <button onClick={sendChat} disabled={founder && !chatPeerUid}
+                className="px-4 rounded-full bg-sunset-600 text-white text-sm font-semibold disabled:opacity-50">Send</button>
+            </div>
+          </div>
         </div>
       )}
 
