@@ -42,7 +42,7 @@ export function listenIsAdmin(uid: string, cb: (entry: AdminEntry | null) => voi
 export function listenAllAdmins(cb: (list: AdminEntry[]) => void) {
   return onValue(ref(db, "admins"), (snap) => {
     const out: AdminEntry[] = [];
-    snap.forEach((c) => out.push({ uid: c.key!, ...(c.val() as any) }));
+    snap.forEach((c) => { out.push({ uid: c.key!, ...(c.val() as any) }); });
     cb(out.sort((a, b) => b.addedAt - a.addedAt));
   });
 }

@@ -26,6 +26,8 @@ import { Route as StoryIdRouteImport } from './routes/story.$id'
 import { Route as PIdRouteImport } from './routes/p.$id'
 import { Route as MehfilIdRouteImport } from './routes/mehfil.$id'
 import { Route as DmUidRouteImport } from './routes/dm.$uid'
+import { Route as ApiPublicRefreshMilestoneRouteImport } from './routes/api/public/refresh-milestone'
+import { Route as ApiPublicNotifyEmailRouteImport } from './routes/api/public/notify-email'
 
 const TrendingRoute = TrendingRouteImport.update({
   id: '/trending',
@@ -112,6 +114,17 @@ const DmUidRoute = DmUidRouteImport.update({
   path: '/$uid',
   getParentRoute: () => DmRoute,
 } as any)
+const ApiPublicRefreshMilestoneRoute =
+  ApiPublicRefreshMilestoneRouteImport.update({
+    id: '/api/public/refresh-milestone',
+    path: '/api/public/refresh-milestone',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicNotifyEmailRoute = ApiPublicNotifyEmailRouteImport.update({
+  id: '/api/public/notify-email',
+  path: '/api/public/notify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +144,8 @@ export interface FileRoutesByFullPath {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
+  '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,6 +165,8 @@ export interface FileRoutesByTo {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
+  '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,6 +187,8 @@ export interface FileRoutesById {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
+  '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +210,8 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/api/public/notify-email'
+    | '/api/public/refresh-milestone'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +231,8 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/api/public/notify-email'
+    | '/api/public/refresh-milestone'
   id:
     | '__root__'
     | '/'
@@ -229,6 +252,8 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/api/public/notify-email'
+    | '/api/public/refresh-milestone'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -247,6 +272,8 @@ export interface RootRouteChildren {
   TrendingRoute: typeof TrendingRoute
   PIdRoute: typeof PIdRoute
   StoryIdRoute: typeof StoryIdRoute
+  ApiPublicNotifyEmailRoute: typeof ApiPublicNotifyEmailRoute
+  ApiPublicRefreshMilestoneRoute: typeof ApiPublicRefreshMilestoneRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -370,6 +397,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DmUidRouteImport
       parentRoute: typeof DmRoute
     }
+    '/api/public/refresh-milestone': {
+      id: '/api/public/refresh-milestone'
+      path: '/api/public/refresh-milestone'
+      fullPath: '/api/public/refresh-milestone'
+      preLoaderRoute: typeof ApiPublicRefreshMilestoneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/notify-email': {
+      id: '/api/public/notify-email'
+      path: '/api/public/notify-email'
+      fullPath: '/api/public/notify-email'
+      preLoaderRoute: typeof ApiPublicNotifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -410,17 +451,9 @@ const rootRouteChildren: RootRouteChildren = {
   TrendingRoute: TrendingRoute,
   PIdRoute: PIdRoute,
   StoryIdRoute: StoryIdRoute,
+  ApiPublicNotifyEmailRoute: ApiPublicNotifyEmailRoute,
+  ApiPublicRefreshMilestoneRoute: ApiPublicRefreshMilestoneRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

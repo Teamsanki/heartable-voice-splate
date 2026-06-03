@@ -38,7 +38,7 @@ export async function claimReward(uid: string, milestoneId: string, taskId: stri
 export function listenMyProgress(uid: string, milestoneId: string, cb: (claims: any[]) => void) {
   return onValue(ref(db, `rewards/claims/${milestoneId}/${uid}`), (snap) => {
     const out: any[] = [];
-    snap.forEach((c) => out.push({ id: c.key!, ...(c.val() as any) }));
+    snap.forEach((c) => { out.push({ id: c.key!, ...(c.val() as any) }); });
     cb(out);
   });
 }
@@ -46,7 +46,7 @@ export function listenMyProgress(uid: string, milestoneId: string, cb: (claims: 
 export function listenGiveaways(cb: (list: any[]) => void) {
   return onValue(ref(db, "rewards/giveaways"), (snap) => {
     const out: any[] = [];
-    snap.forEach((c) => out.push({ id: c.key!, ...(c.val() as any) }));
+    snap.forEach((c) => { out.push({ id: c.key!, ...(c.val() as any) }); });
     cb(out.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
   });
 }
@@ -70,7 +70,7 @@ export async function enterGiveaway(giveawayId: string, uid: string, name: strin
 export async function pickGiveawayWinner(giveawayId: string) {
   const snap = await get(ref(db, `rewards/giveaways/${giveawayId}/entries`));
   const entries: { uid: string; name: string }[] = [];
-  snap.forEach((c) => entries.push({ uid: c.key!, name: c.child("name").val() || "Winner" }));
+  snap.forEach((c) => { entries.push({ uid: c.key!, name: c.child("name").val() || "Winner" }); });
   if (entries.length === 0) return null;
   const win = entries[Math.floor(Math.random() * entries.length)];
   await update(ref(db, `rewards/giveaways/${giveawayId}`), { winner: win });
