@@ -4,9 +4,10 @@ import { VoicePlayer } from "./VoicePlayer";
 import { CommentSheet } from "./CommentSheet";
 import { FollowButton } from "./FollowButton";
 import { PostMenu } from "./PostMenu";
-import { VerifiedBadge } from "./VerifiedBadge";
+import { UserBadges } from "./UserBadges";
 import { listenLiked, toggleLike, recordShare } from "@/lib/social";
 import { useAuth } from "@/lib/auth-context";
+import { shayariFontFamily, loadShayariFont } from "@/lib/shayari";
 import type { VoiceFilter } from "@/lib/audio-filters";
 
 export type FeedItem = {
@@ -23,6 +24,11 @@ export type FeedItem = {
   commentCount?: number;
   shareCount?: number;
   createdAt: number;
+  type?: "voice" | "shayari";
+  text?: string;
+  fontId?: string;
+  bgCss?: string;
+  fgColor?: string;
 };
 
 export function FeedCard({ item }: { item: FeedItem }) {
@@ -34,6 +40,10 @@ export function FeedCard({ item }: { item: FeedItem }) {
     if (!user) return;
     return listenLiked(item.id, user.uid, setLiked);
   }, [user, item.id]);
+
+  useEffect(() => {
+    if (item.type === "shayari" && item.fontId) loadShayariFont(item.fontId as any);
+  }, [item.type, item.fontId]);
 
   const onLike = async () => {
     if (!user) return;
@@ -77,10 +87,10 @@ export function FeedCard({ item }: { item: FeedItem }) {
             <div className="leading-tight">
               <p className="text-xs font-semibold flex items-center gap-1">
                 {item.name}
-                <VerifiedBadge uid={item.uid} size={11} />
+                <UserBadges uid={item.uid} size={10} />
               </p>
               <p className="text-[10px] opacity-50">
-                {item.category || "voice"} · {item.filter}
+                {item.type === "shayari" ? "✒️ shayari" : `${item.category || "voice"} · ${item.filter}`}
               </p>
             </div>
           </div>
@@ -95,7 +105,19 @@ export function FeedCard({ item }: { item: FeedItem }) {
           <p className="text-base font-serif leading-snug">{item.caption}</p>
         )}
 
-        <VoicePlayer url={item.url} filter={item.filter} durationSec={item.durationSec} />
+        {item.type === "shayari" ? (
+          <div
+            className="rounded-2xl aspect-[5/4] grid place-items-center p-6 text-center overflow-hidden"
+            style={{ background: item.bgCss || "linear-gradient(135deg,#0a0a0a,#1a1a1a)", color: item.fgColor || "#fff8ee" }}
+          >
+            <p
+              className="text-2xl whitespace-pre-wrap break-words"
+              style={{ fontFamily: shayariFontFamily(item.fontId), lineHeight: 1.4 }}
+            >{item.text}</p>
+          </div>
+        ) : (
+          <VoicePlayer url={item.url} filter={item.filter} durationSec={item.durationSec} />
+        )}
 
         <div className="flex items-center gap-4 pt-1">
           <button

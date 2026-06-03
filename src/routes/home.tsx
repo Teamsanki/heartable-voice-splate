@@ -14,7 +14,8 @@ import { consumeGuestQuota, getGuestQuota } from "@/lib/voice-api";
 import { shouldRemindStreakBreak, badgeFor } from "@/lib/streak";
 import { listenNotifs } from "@/lib/notifications-store";
 import { listenMyBlocks } from "@/lib/blocks";
-import { Bell } from "lucide-react";
+import { Bell, Feather } from "lucide-react";
+import { ShayariComposer } from "@/components/ShayariComposer";
 import type { VoiceFilter } from "@/lib/audio-filters";
 
 type StoryItem = {
@@ -53,6 +54,7 @@ function Home() {
   const [quota, setQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null);
   const [unread, setUnread] = useState(0);
   const [blocks, setBlocks] = useState<Set<string>>(new Set());
+  const [shayariOpen, setShayariOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -192,6 +194,13 @@ function Home() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShayariOpen(true)}
+              aria-label="New shayari"
+              className="size-10 rounded-full bg-gradient-to-br from-sunset-400 to-sunset-700 text-white grid place-items-center shadow-md shadow-sunset-600/30 active:scale-95 transition"
+            >
+              <Feather className="size-4" />
+            </button>
             <Link to="/notifications" aria-label="Notifications"
               className="relative size-10 rounded-full bg-sunset-100 grid place-items-center">
               <Bell className="size-4" />
@@ -209,6 +218,8 @@ function Home() {
           </Link>
           </div>
         </header>
+
+        {shayariOpen && <ShayariComposer onClose={() => setShayariOpen(false)} />}
 
         <BroadcastBanner />
 

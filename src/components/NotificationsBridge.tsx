@@ -5,6 +5,7 @@ import { onValue, ref } from "firebase/database";
 import { db, VOICE_ROOT } from "@/lib/firebase";
 import { shouldRemindStreakBreak } from "@/lib/streak";
 import { pushNotif } from "@/lib/notifications-store";
+import { sendEmailNotify } from "@/lib/email-notify";
 import {
   markBroadcastNotified,
   maybeNotifyStreakBreak,
@@ -56,6 +57,9 @@ export function NotificationsBridge() {
           fromName: "Heartable",
           text: `${latest.title} — ${latest.body}`,
         }).catch(() => {});
+        if (user.email) {
+          sendEmailNotify({ to: user.email, kind: "broadcast", fromName: latest.title, text: latest.body, link: location.origin + "/home" });
+        }
       }
     });
   }, [user]);
