@@ -10,6 +10,7 @@ import {
 import { AuthProvider } from "@/lib/auth-context";
 import { NotificationsBridge } from "@/components/NotificationsBridge";
 import { ThemeBridge } from "@/components/ThemeBridge";
+import { PresenceBridge } from "@/components/PresenceBridge";
 
 import appCss from "../styles.css?url";
 
@@ -121,6 +122,7 @@ function RootComponent() {
       <AuthProvider>
         <ThemeBridge />
         <NotificationsBridge />
+        <PresenceBridge />
         <Outlet />
       </AuthProvider>
     </QueryClientProvider>
