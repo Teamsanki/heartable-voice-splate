@@ -12,12 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrendingRouteImport } from './routes/trending'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as RecordRouteImport } from './routes/record'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MehfilRouteImport } from './routes/mehfil'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as DmRouteImport } from './routes/dm'
 import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -44,6 +47,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordRoute = RecordRouteImport.update({
   id: '/record',
   path: '/record',
@@ -52,6 +60,11 @@ const RecordRoute = RecordRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -72,6 +85,11 @@ const LoginRoute = LoginRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidelinesRoute = GuidelinesRouteImport.update({
+  id: '/guidelines',
+  path: '/guidelines',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DmRoute = DmRouteImport.update({
@@ -131,12 +149,15 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
+  '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -152,12 +173,15 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
+  '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -174,12 +198,15 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
   '/dm': typeof DmRouteWithChildren
+  '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
   '/login': typeof LoginRoute
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
+  '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -197,12 +224,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/banned'
     | '/dm'
+    | '/guidelines'
     | '/home'
     | '/login'
     | '/mehfil'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/record'
+    | '/rewards'
     | '/settings'
     | '/support'
     | '/trending'
@@ -218,12 +248,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/banned'
     | '/dm'
+    | '/guidelines'
     | '/home'
     | '/login'
     | '/mehfil'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/record'
+    | '/rewards'
     | '/settings'
     | '/support'
     | '/trending'
@@ -239,12 +272,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/banned'
     | '/dm'
+    | '/guidelines'
     | '/home'
     | '/login'
     | '/mehfil'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/record'
+    | '/rewards'
     | '/settings'
     | '/support'
     | '/trending'
@@ -261,12 +297,15 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   BannedRoute: typeof BannedRoute
   DmRoute: typeof DmRouteWithChildren
+  GuidelinesRoute: typeof GuidelinesRoute
   HomeRoute: typeof HomeRoute
   LoginRoute: typeof LoginRoute
   MehfilRoute: typeof MehfilRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RecordRoute: typeof RecordRoute
+  RewardsRoute: typeof RewardsRoute
   SettingsRoute: typeof SettingsRoute
   SupportRoute: typeof SupportRoute
   TrendingRoute: typeof TrendingRoute
@@ -299,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/record': {
       id: '/record'
       path: '/record'
@@ -311,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -339,6 +392,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guidelines': {
+      id: '/guidelines'
+      path: '/guidelines'
+      fullPath: '/guidelines'
+      preLoaderRoute: typeof GuidelinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dm': {
@@ -440,12 +500,15 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   BannedRoute: BannedRoute,
   DmRoute: DmRouteWithChildren,
+  GuidelinesRoute: GuidelinesRoute,
   HomeRoute: HomeRoute,
   LoginRoute: LoginRoute,
   MehfilRoute: MehfilRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RecordRoute: RecordRoute,
+  RewardsRoute: RewardsRoute,
   SettingsRoute: SettingsRoute,
   SupportRoute: SupportRoute,
   TrendingRoute: TrendingRoute,
