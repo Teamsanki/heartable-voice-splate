@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { Heart, MessageCircle, Share2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
 import { VoicePlayer } from "./VoicePlayer";
 import { CommentSheet } from "./CommentSheet";
 import { FollowButton } from "./FollowButton";
 import { PostMenu } from "./PostMenu";
 import { UserBadges } from "./UserBadges";
+import { RichText } from "./RichText";
 import { listenLiked, toggleLike, recordShare } from "@/lib/social";
+import { listenBookmarked, toggleBookmark } from "@/lib/bookmarks";
 import { useAuth } from "@/lib/auth-context";
 import { shayariFontFamily, loadShayariFont } from "@/lib/shayari";
 import type { VoiceFilter } from "@/lib/audio-filters";
@@ -34,11 +36,17 @@ export type FeedItem = {
 export function FeedCard({ item }: { item: FeedItem }) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     return listenLiked(item.id, user.uid, setLiked);
+  }, [user, item.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    return listenBookmarked(user.uid, item.id, setSaved);
   }, [user, item.id]);
 
   useEffect(() => {
@@ -102,7 +110,9 @@ export function FeedCard({ item }: { item: FeedItem }) {
         </div>
 
         {item.caption && (
-          <p className="text-base font-serif leading-snug">{item.caption}</p>
+          <p className="text-base font-serif leading-snug">
+            <RichText text={item.caption} />
+          </p>
         )}
 
         {item.type === "shayari" ? (
@@ -113,7 +123,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
             <p
               className="text-2xl whitespace-pre-wrap break-words"
               style={{ fontFamily: shayariFontFamily(item.fontId), lineHeight: 1.4 }}
-            >{item.text}</p>
+            ><RichText text={item.text || ""} /></p>
           </div>
         ) : (
           <VoicePlayer url={item.url} filter={item.filter} durationSec={item.durationSec} />
@@ -142,6 +152,13 @@ export function FeedCard({ item }: { item: FeedItem }) {
           >
             <Share2 className="size-5 text-sunset-900/70" />
             <span className="tabular-nums">{item.shareCount || 0}</span>
+          </button>
+          <button
+            onClick={() => user && toggleBookmark(user.uid, item.id)}
+            aria-label="Bookmark"
+            className="flex items-center active:scale-95 transition"
+          >
+            <Bookmark className={`size-5 ${saved ? "fill-sunset-600 text-sunset-600" : "text-sunset-900/70"}`} />
           </button>
         </div>
       </article>

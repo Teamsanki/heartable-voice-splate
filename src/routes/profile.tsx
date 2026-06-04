@@ -13,7 +13,7 @@ import { listenUserStats, listenUserPosts, type UserStats } from "@/lib/social";
 import { updateProfileName, updateProfilePhoto } from "@/lib/social";
 import { uploadImage } from "@/lib/voice-api";
 
-import { Settings as SettingsIcon, Pencil, Camera } from "lucide-react";
+import { Settings as SettingsIcon, Pencil, Camera, Bookmark, Search as SearchIcon } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Profile — Heartable" }] }),
@@ -87,7 +87,15 @@ function ProfilePage() {
 
   return (
     <MobileShell className="p-5 gap-5">
-        <div className="flex justify-end -mb-2">
+        <div className="flex justify-end gap-2 -mb-2">
+          <Link to="/search" aria-label="Search"
+            className="size-9 rounded-full bg-sunset-100 grid place-items-center">
+            <SearchIcon className="size-4" />
+          </Link>
+          <Link to="/bookmarks" aria-label="Saved"
+            className="size-9 rounded-full bg-sunset-100 grid place-items-center">
+            <Bookmark className="size-4" />
+          </Link>
           <Link to="/settings" aria-label="Settings"
             className="size-9 rounded-full bg-sunset-100 grid place-items-center">
             <SettingsIcon className="size-4" />

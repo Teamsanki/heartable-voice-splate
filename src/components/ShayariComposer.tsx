@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { push, ref, serverTimestamp, set } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { bumpStreak } from "@/lib/streak";
+import { indexPostHashtags } from "@/lib/hashtags";
 import { SHAYARI_FONTS, loadShayariFont, shayariFontFamily } from "@/lib/shayari";
 
 const BG_PRESETS = [
@@ -51,6 +52,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
         createdAt: serverTimestamp(),
       });
       await bumpStreak(user.uid);
+      indexPostHashtags(node.key!, text, Date.now()).catch(() => {});
       onClose();
     } finally { setBusy(false); }
   };
