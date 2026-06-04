@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrendingRouteImport } from './routes/trending'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as RecordRouteImport } from './routes/record'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -22,9 +23,11 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as DmRouteImport } from './routes/dm'
+import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TagTagRouteImport } from './routes/tag.$tag'
 import { Route as StoryIdRouteImport } from './routes/story.$id'
 import { Route as PIdRouteImport } from './routes/p.$id'
 import { Route as MehfilIdRouteImport } from './routes/mehfil.$id'
@@ -45,6 +48,11 @@ const SupportRoute = SupportRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RewardsRoute = RewardsRouteImport.update({
@@ -97,6 +105,11 @@ const DmRoute = DmRouteImport.update({
   path: '/dm',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookmarksRoute = BookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BannedRoute = BannedRouteImport.update({
   id: '/banned',
   path: '/banned',
@@ -110,6 +123,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TagTagRoute = TagTagRouteImport.update({
+  id: '/tag/$tag',
+  path: '/tag/$tag',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoryIdRoute = StoryIdRouteImport.update({
@@ -148,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
+  '/bookmarks': typeof BookmarksRoute
   '/dm': typeof DmRouteWithChildren
   '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
@@ -158,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
   '/rewards': typeof RewardsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -165,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/tag/$tag': typeof TagTagRoute
   '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
   '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
@@ -172,6 +193,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
+  '/bookmarks': typeof BookmarksRoute
   '/dm': typeof DmRouteWithChildren
   '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
@@ -182,6 +204,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
   '/rewards': typeof RewardsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -189,6 +212,7 @@ export interface FileRoutesByTo {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/tag/$tag': typeof TagTagRoute
   '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
   '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
@@ -197,6 +221,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/banned': typeof BannedRoute
+  '/bookmarks': typeof BookmarksRoute
   '/dm': typeof DmRouteWithChildren
   '/guidelines': typeof GuidelinesRoute
   '/home': typeof HomeRoute
@@ -207,6 +232,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/record': typeof RecordRoute
   '/rewards': typeof RewardsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/trending': typeof TrendingRoute
@@ -214,6 +240,7 @@ export interface FileRoutesById {
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
   '/story/$id': typeof StoryIdRoute
+  '/tag/$tag': typeof TagTagRoute
   '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
   '/api/public/refresh-milestone': typeof ApiPublicRefreshMilestoneRoute
 }
@@ -223,6 +250,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/banned'
+    | '/bookmarks'
     | '/dm'
     | '/guidelines'
     | '/home'
@@ -233,6 +261,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/record'
     | '/rewards'
+    | '/search'
     | '/settings'
     | '/support'
     | '/trending'
@@ -240,6 +269,7 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/tag/$tag'
     | '/api/public/notify-email'
     | '/api/public/refresh-milestone'
   fileRoutesByTo: FileRoutesByTo
@@ -247,6 +277,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/banned'
+    | '/bookmarks'
     | '/dm'
     | '/guidelines'
     | '/home'
@@ -257,6 +288,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/record'
     | '/rewards'
+    | '/search'
     | '/settings'
     | '/support'
     | '/trending'
@@ -264,6 +296,7 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/tag/$tag'
     | '/api/public/notify-email'
     | '/api/public/refresh-milestone'
   id:
@@ -271,6 +304,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/banned'
+    | '/bookmarks'
     | '/dm'
     | '/guidelines'
     | '/home'
@@ -281,6 +315,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/record'
     | '/rewards'
+    | '/search'
     | '/settings'
     | '/support'
     | '/trending'
@@ -288,6 +323,7 @@ export interface FileRouteTypes {
     | '/mehfil/$id'
     | '/p/$id'
     | '/story/$id'
+    | '/tag/$tag'
     | '/api/public/notify-email'
     | '/api/public/refresh-milestone'
   fileRoutesById: FileRoutesById
@@ -296,6 +332,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   BannedRoute: typeof BannedRoute
+  BookmarksRoute: typeof BookmarksRoute
   DmRoute: typeof DmRouteWithChildren
   GuidelinesRoute: typeof GuidelinesRoute
   HomeRoute: typeof HomeRoute
@@ -306,11 +343,13 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RecordRoute: typeof RecordRoute
   RewardsRoute: typeof RewardsRoute
+  SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   SupportRoute: typeof SupportRoute
   TrendingRoute: typeof TrendingRoute
   PIdRoute: typeof PIdRoute
   StoryIdRoute: typeof StoryIdRoute
+  TagTagRoute: typeof TagTagRoute
   ApiPublicNotifyEmailRoute: typeof ApiPublicNotifyEmailRoute
   ApiPublicRefreshMilestoneRoute: typeof ApiPublicRefreshMilestoneRoute
 }
@@ -336,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rewards': {
@@ -408,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DmRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bookmarks': {
+      id: '/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof BookmarksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/banned': {
       id: '/banned'
       path: '/banned'
@@ -427,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tag/$tag': {
+      id: '/tag/$tag'
+      path: '/tag/$tag'
+      fullPath: '/tag/$tag'
+      preLoaderRoute: typeof TagTagRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/story/$id': {
@@ -499,6 +559,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   BannedRoute: BannedRoute,
+  BookmarksRoute: BookmarksRoute,
   DmRoute: DmRouteWithChildren,
   GuidelinesRoute: GuidelinesRoute,
   HomeRoute: HomeRoute,
@@ -509,11 +570,13 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RecordRoute: RecordRoute,
   RewardsRoute: RewardsRoute,
+  SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   SupportRoute: SupportRoute,
   TrendingRoute: TrendingRoute,
   PIdRoute: PIdRoute,
   StoryIdRoute: StoryIdRoute,
+  TagTagRoute: TagTagRoute,
   ApiPublicNotifyEmailRoute: ApiPublicNotifyEmailRoute,
   ApiPublicRefreshMilestoneRoute: ApiPublicRefreshMilestoneRoute,
 }

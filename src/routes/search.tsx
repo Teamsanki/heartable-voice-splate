@@ -53,7 +53,7 @@ function SearchPage() {
       ]);
       if (cancelled) return;
       const u: UserHit[] = [];
-      uSnap.forEach((c) => {
+      uSnap.forEach((c: any) => {
         const p = c.child("profile").val() as any;
         if (!p?.name) return;
         if (String(p.name).toLowerCase().includes(term)) {
@@ -63,7 +63,7 @@ function SearchPage() {
       setUsers(u.slice(0, 30));
       if (mode !== "user" && pSnap) {
         const ps: PostHit[] = [];
-        pSnap.forEach((c) => {
+        pSnap.forEach((c: any) => {
           const v = c.val() as any;
           const hay = `${v?.caption || ""} ${v?.text || ""}`.toLowerCase();
           if (hay.includes(term)) ps.push({ id: c.key!, name: v?.name || "", caption: v?.caption, text: v?.text, type: v?.type });
