@@ -265,7 +265,7 @@ function Home() {
                 key={s.id}
                 to="/story/$id"
                 params={{ id: s.id }}
-                search={{ uid: s.uid }}
+                search={{ uid: s.uid, q: stories.map((x) => `${x.id}:${x.uid}`).join(",") }}
                 className="flex-shrink-0 flex flex-col items-center gap-2 snap-start"
               >
                 <div className="size-16 rounded-full p-[2px] ring-2 ring-sunset-600 ring-offset-2 ring-offset-sunset-50 bg-sunset-200 grid place-items-center">
