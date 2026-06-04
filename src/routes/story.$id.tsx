@@ -38,7 +38,7 @@ function StoryPage() {
   const [progress, setProgress] = useState(0);
 
   // Parse queue "id1:uid1,id2:uid2"
-  const queue = (q || "").split(",").filter(Boolean).map((s) => {
+  const queue: { id: string; uid: string }[] = (q || "").split(",").filter(Boolean).map((s: string) => {
     const [sid, suid] = s.split(":");
     return { id: sid, uid: suid };
   });
@@ -124,7 +124,7 @@ function StoryPage() {
     <div className="min-h-screen bg-gradient-to-b from-sunset-700 to-sunset-900 text-sunset-50 p-6 flex flex-col">
       {/* Progress bars (segmented if queue) */}
       <div className="flex gap-1 mb-3">
-        {(queue.length ? queue : [{ id, uid }]).map((s, i) => {
+        {(queue.length ? queue : [{ id, uid }]).map((s: { id: string; uid: string }, i: number) => {
           const filled = idx >= 0 && i < idx ? 1 : i === idx ? progress : 0;
           return (
             <div key={s.id} className="flex-1 h-0.5 bg-white/20 rounded overflow-hidden">
