@@ -116,6 +116,25 @@
         ".read": "auth != null && (data.child('uid').val() === auth.uid || auth.token.email === 'schoudhary11256@gmail.com')",
         ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid || auth.token.email === 'schoudhary11256@gmail.com')"
       }
+    },
+
+    "bookmarks": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+
+    "hashtags": {
+      ".read": true,
+      "counts": {
+        "$tag": { ".write": "auth != null" }
+      },
+      "posts": {
+        "$tag": {
+          "$postId": { ".write": "auth != null" }
+        }
+      }
     }
   }
 }
