@@ -3,6 +3,7 @@ import { get, runTransaction } from "firebase/database";
 import { db, VOICE_ROOT, GUEST_DAILY_VOICE_LIMIT } from "./firebase";
 import { supabase } from "@/integrations/supabase/client";
 import { bumpStreak } from "./streak";
+import { indexPostHashtags } from "./hashtags";
 import type { VoiceFilter } from "./audio-filters";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -74,6 +75,9 @@ export async function postFeed(opts: {
     createdAt: serverTimestamp(),
   });
   await bumpStreak(opts.uid);
+  if (opts.caption) {
+    indexPostHashtags(node.key!, opts.caption, Date.now()).catch(() => {});
+  }
   return node.key!;
 }
 
