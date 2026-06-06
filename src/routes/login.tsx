@@ -30,7 +30,7 @@ function LoginPage() {
   return (
     <div className="min-h-[100dvh] bg-sunset-50 flex flex-col items-center justify-center p-5">
       <div className="text-center mb-8">
-        <h1 className="font-serif italic text-5xl">Heartable</h1>
+        <h1 className="font-serif italic text-5xl flex items-center justify-center gap-2">Heartable <BetaBadge /></h1>
         <p className="text-[10px] tracking-[0.3em] uppercase opacity-60 mt-1">
           Voices of the Soul
         </p>
@@ -38,10 +38,10 @@ function LoginPage() {
       {guestExpired && (
         <div className="w-full max-w-sm mb-4 p-4 rounded-2xl bg-red-50 ring-1 ring-red-200 text-center space-y-3">
           <p className="text-sm text-red-800 font-semibold">
-            ⏰ Guest 7 din pure ho gaye
+            ⏰ Guest period expired
           </p>
           <p className="text-xs text-red-700">
-            Account expire ho chuka hai. Google se bind kar le — purana data wapas mil jaayega.
+            Your guest account has expired. Sign in with Google to restore your data.
           </p>
           <button
             onClick={restoreGoogle}

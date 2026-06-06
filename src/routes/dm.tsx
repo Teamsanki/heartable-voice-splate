@@ -73,7 +73,7 @@ function DMList() {
     <MobileShell className="p-5 gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.25em] opacity-60">Heartable</p>
+          <p className="text-[10px] uppercase tracking-[0.25em] opacity-60 inline-flex items-center gap-1.5">Heartable <BetaBadge /></p>
           <h1 className="font-serif italic text-3xl">Chats</h1>
         </div>
         <button

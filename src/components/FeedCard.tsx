@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Heart, MessageCircle, Share2, Bookmark, Repeat2, Eye } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, Repeat2, Play } from "lucide-react";
 import { VoicePlayer } from "./VoicePlayer";
 import { CommentSheet } from "./CommentSheet";
 import { FollowButton } from "./FollowButton";
@@ -99,7 +99,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
     const url = `${location.origin}/p/${item.id}`;
     const shareData = {
       title: `${item.name} on Heartable`,
-      text: item.caption || "Sun ye awaaz",
+      text: item.caption || "Listen to this voice",
       url,
     };
     try {
@@ -107,7 +107,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Link copy ho gaya!");
+        alert("Link copied!");
       }
       await recordShare(item.id, user?.uid);
     } catch {
@@ -117,7 +117,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
 
   return (
     <>
-      <article className="bg-white rounded-[22px] p-4 ring-1 ring-foreground/5 space-y-3">
+      <article className="bg-card text-card-foreground rounded-[22px] p-4 ring-1 ring-foreground/5 space-y-3">
         {item.repostOf && (
           <p className="text-[10px] uppercase tracking-widest opacity-50 flex items-center gap-1">
             <Repeat2 className="size-3" /> reposted from {item.repostName || "user"}
@@ -159,7 +159,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
 
         {item.type === "shayari" ? (
           <div
-            className="rounded-2xl aspect-[5/4] grid place-items-center p-6 text-center overflow-hidden"
+            className="rounded-2xl min-h-[280px] grid place-items-center p-6 text-center"
             style={{ background: item.bgCss || "linear-gradient(135deg,#0a0a0a,#1a1a1a)", color: item.fgColor || "#fff8ee" }}
           >
             <p
@@ -229,7 +229,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
             <span className="tabular-nums">{item.repostCount || 0}</span>
           </button>
           <span className="flex items-center gap-1 text-[10px] opacity-50">
-            <Eye className="size-4" />
+            <Play className="size-4" />
             <span className="tabular-nums">{item.viewCount || 0}</span>
           </span>
           <button
