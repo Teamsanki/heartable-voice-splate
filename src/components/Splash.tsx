@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { BetaBadge } from "@/components/BetaBadge";
 
 export function Splash({ onDone }: { onDone: () => void }) {
   return (

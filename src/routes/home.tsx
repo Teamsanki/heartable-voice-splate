@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BetaBadge } from "@/components/BetaBadge";
 import { useEffect, useState } from "react";
 import { onValue, ref, query, orderByChild, limitToLast } from "firebase/database";
 import { db, VOICE_ROOT } from "@/lib/firebase";

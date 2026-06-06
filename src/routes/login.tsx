@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { BetaBadge } from "@/components/BetaBadge";
 import { useEffect, useState } from "react";
 import { LoginCard } from "@/components/LoginCard";
 import { useAuth } from "@/lib/auth-context";
