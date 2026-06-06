@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { BetaBadge } from "@/components/BetaBadge";
 
 export function Splash({ onDone }: { onDone: () => void }) {
   return (
@@ -50,9 +51,9 @@ export function Splash({ onDone }: { onDone: () => void }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.9, ease: "easeOut" }}
-        className="font-serif italic text-6xl text-sunset-50 leading-none"
+        className="font-serif italic text-6xl text-sunset-50 leading-none flex items-center justify-center gap-3"
       >
-        Heartable
+        Heartable <BetaBadge />
       </motion.h1>
 
       <motion.p

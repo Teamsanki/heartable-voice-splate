@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { BetaBadge } from "@/components/BetaBadge";
 import { useEffect, useState } from "react";
 import { MobileShell } from "@/components/MobileShell";
 import { BottomNav } from "@/components/BottomNav";
@@ -34,7 +35,7 @@ function RewardsPage() {
   return (
     <MobileShell className="p-5 gap-5">
       <header>
-        <p className="text-[10px] uppercase tracking-[0.25em] opacity-60">Heartable Rewards</p>
+        <p className="text-[10px] uppercase tracking-[0.25em] opacity-60 inline-flex items-center gap-1.5">Heartable Rewards <BetaBadge /></p>
         <h1 className="font-serif italic text-3xl flex items-center gap-2">Weekly Drops <Gift className="size-6 text-sunset-600" /></h1>
         <p className="text-sm opacity-70 mt-1">Complete the week's milestones. Random gifts drop every Sunday at midnight.</p>
       </header>

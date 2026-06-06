@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BetaBadge } from "@/components/BetaBadge";
 import { useEffect, useState } from "react";
 import { onValue, ref, query, orderByChild, limitToLast } from "firebase/database";
 import { db, VOICE_ROOT } from "@/lib/firebase";
@@ -188,7 +189,7 @@ function Home() {
     <MobileShell>
       <header className="pt-8 px-5 pb-4 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-serif italic leading-none">Heartable</h1>
+            <h1 className="text-3xl font-serif italic leading-none flex items-center gap-2">Heartable <BetaBadge /></h1>
             <p className="text-[10px] tracking-[0.25em] uppercase opacity-60 mt-1.5">
               Voices of the Soul
             </p>

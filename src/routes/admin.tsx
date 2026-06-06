@@ -60,6 +60,7 @@ function AdminPage() {
 
   const [admins, setAdmins] = useState<AdminEntry[]>([]);
   const [myAdmin, setMyAdmin] = useState<AdminEntry | null>(null);
+  const [adminChecked, setAdminChecked] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminRole, setNewAdminRole] = useState<AdminRole>("support");
 
@@ -97,7 +98,7 @@ function AdminPage() {
 
   useEffect(() => {
     if (!user) return;
-    return listenIsAdmin(user.uid, setMyAdmin);
+    return listenIsAdmin(user.uid, (a) => { setMyAdmin(a); setAdminChecked(true); });
   }, [user]);
 
   // stats
@@ -143,6 +144,7 @@ function AdminPage() {
   }, [activeTicket]);
 
   if (loading) return <div className="min-h-[100dvh] grid place-items-center">Loading…</div>;
+  if (!founder && !adminChecked) return <div className="min-h-[100dvh] grid place-items-center">Checking permissions…</div>;
   if (!hasAdminAccess) {
     return (
       <div className="min-h-[100dvh] grid place-items-center p-6 text-center">

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BetaBadge } from "@/components/BetaBadge";
 import { useEffect, useState } from "react";
 import { onValue, ref } from "firebase/database";
 import { db } from "@/lib/firebase";
@@ -28,9 +29,9 @@ function SharedPost() {
   return (
     <div className="min-h-[100dvh] bg-sunset-50 p-5">
       <div className="w-full sm:max-w-[480px] mx-auto space-y-5">
-        <Link to="/home" className="font-serif italic text-2xl block">Heartable</Link>
+        <Link to="/home" className="font-serif italic text-2xl inline-flex items-center gap-2">Heartable <BetaBadge /></Link>
         {notFound ? (
-          <p className="text-center opacity-60 py-12">Ye awaaz nahi mili.</p>
+          <p className="text-center opacity-60 py-12">Voice not found.</p>
         ) : !post ? (
           <p className="text-center opacity-60 py-12">Loading…</p>
         ) : (
