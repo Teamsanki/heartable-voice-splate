@@ -38,6 +38,9 @@ export type FeedItem = {
   repostOf?: string;
   repostUid?: string;
   repostName?: string;
+  hidePlays?: boolean;
+  hideLikes?: boolean;
+  commentsOff?: boolean;
 };
 
 export function FeedCard({ item }: { item: FeedItem }) {
@@ -218,14 +221,16 @@ export function FeedCard({ item }: { item: FeedItem }) {
             <Heart
               className={`size-5 ${liked ? "fill-sunset-600 text-sunset-600" : "text-sunset-900/70"}`}
             />
-            <span className="tabular-nums">{item.likeCount || 0}</span>
+            {!item.hideLikes && <span className="tabular-nums">{item.likeCount || 0}</span>}
           </button>
           <button
-            onClick={() => setOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-medium active:scale-95 transition"
+            onClick={() => !item.commentsOff && setOpen(true)}
+            disabled={!!item.commentsOff}
+            title={item.commentsOff ? "Comments are off" : "Comments"}
+            className="flex items-center gap-1.5 text-xs font-medium active:scale-95 transition disabled:opacity-40"
           >
             <MessageCircle className="size-5 text-sunset-900/70" />
-            <span className="tabular-nums">{item.commentCount || 0}</span>
+            {!item.commentsOff && <span className="tabular-nums">{item.commentCount || 0}</span>}
           </button>
           <button
             onClick={onRepost}
@@ -236,10 +241,12 @@ export function FeedCard({ item }: { item: FeedItem }) {
             <Repeat2 className="size-5 text-sunset-900/70" />
             <span className="tabular-nums">{item.repostCount || 0}</span>
           </button>
-          <span className="flex items-center gap-1 text-[10px] opacity-50">
-            <Play className="size-4" />
-            <span className="tabular-nums">{item.viewCount || 0}</span>
-          </span>
+          {!item.hidePlays && (
+            <span className="flex items-center gap-1 text-[10px] opacity-50">
+              <Play className="size-4" />
+              <span className="tabular-nums">{item.viewCount || 0}</span>
+            </span>
+          )}
           <button
             onClick={onShare}
             className="flex items-center gap-1.5 text-xs font-medium ml-auto active:scale-95 transition"
@@ -256,7 +263,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
           </button>
         </div>
       </article>
-      {open && <CommentSheet postId={item.id} onClose={() => setOpen(false)} />}
+      {open && <CommentSheet postId={item.id} authorUid={item.uid} onClose={() => setOpen(false)} />}
     </>
   );
 }
