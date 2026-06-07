@@ -1,4 +1,4 @@
-import { get, onValue, push, ref, runTransaction, serverTimestamp, set, update } from "firebase/database";
+import { get, onValue, push, ref, remove, runTransaction, serverTimestamp, set, update } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
 import { pushNotif } from "./notifications-store";
 
@@ -82,4 +82,29 @@ export async function repost(originalPostId: string, byUid: string, byName: stri
     });
   }
   return node.key!;
+}
+
+/* ---------------- Post Advance Settings ---------------- */
+
+export type PostSettings = {
+  hidePlays?: boolean;
+  hideLikes?: boolean;
+  commentsOff?: boolean;
+};
+
+export async function updatePostSettings(postId: string, settings: PostSettings) {
+  await update(ref(db, `feed/${postId}`), {
+    hidePlays: !!settings.hidePlays,
+    hideLikes: !!settings.hideLikes,
+    commentsOff: !!settings.commentsOff,
+  });
+}
+
+/* ---------------- Comment moderation (author) ---------------- */
+
+export async function deleteComment(postId: string, commentId: string) {
+  await remove(ref(db, `comments/${postId}/${commentId}`));
+  await runTransaction(ref(db, `feed/${postId}/commentCount`), (n: any) =>
+    Math.max(0, (n || 0) - 1),
+  );
 }
