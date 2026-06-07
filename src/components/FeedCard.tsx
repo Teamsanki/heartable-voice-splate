@@ -179,26 +179,34 @@ export function FeedCard({ item }: { item: FeedItem }) {
               const pct = poll.total ? Math.round((c / poll.total) * 100) : 0;
               const mine = poll.myVote === i;
               const voted = poll.myVote !== null;
+              const leading = voted && poll.total > 0 && c === Math.max(...Object.values(poll.counts));
               return (
                 <button
                   key={i}
                   onClick={() => user && votePostPoll(item.id, user.uid, i)}
-                  className={`relative w-full text-left text-xs px-3 py-2 rounded-xl overflow-hidden ring-1 ${mine ? "ring-sunset-600" : "ring-black/10"}`}
+                  className={`relative w-full text-left text-xs px-3 py-2 rounded-xl overflow-hidden ring-1 transition-all ${mine ? "ring-sunset-600 ring-2" : "ring-black/10 hover:ring-black/20"}`}
                 >
                   {voted && (
                     <span
-                      className="absolute inset-y-0 left-0 bg-sunset-300/60"
+                      className={`absolute inset-y-0 left-0 transition-[width] duration-700 ease-out ${leading ? "bg-sunset-400/80" : "bg-sunset-300/50"}`}
                       style={{ width: `${pct}%` }}
                     />
                   )}
                   <span className="relative flex justify-between gap-2">
-                    <span>{opt}</span>
-                    {voted && <span className="opacity-70 tabular-nums">{pct}%</span>}
+                    <span className="flex items-center gap-1.5">
+                      {opt}
+                      {mine && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sunset-600 text-white">Your pick</span>}
+                    </span>
+                    {voted && (
+                      <span className={`tabular-nums transition-colors ${leading ? "font-semibold text-sunset-900" : "opacity-70"}`}>
+                        {pct}%
+                      </span>
+                    )}
                   </span>
                 </button>
               );
             })}
-            <p className="text-[10px] opacity-50">{poll.total} vote{poll.total === 1 ? "" : "s"}</p>
+            <p className="text-[10px] opacity-50 tabular-nums">{poll.total} vote{poll.total === 1 ? "" : "s"}{poll.myVote !== null && " · tap to change"}</p>
           </div>
         )}
 
