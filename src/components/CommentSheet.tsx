@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { addComment, listenComments } from "@/lib/social";
+import { deleteComment } from "@/lib/posts";
+import { submitReport } from "@/lib/reports";
+import { Trash2, Flag } from "lucide-react";
 
 export function CommentSheet({
   postId,
+  authorUid,
   onClose,
 }: {
   postId: string;
+  authorUid: string;
   onClose: () => void;
 }) {
   const { user, profile } = useAuth();
@@ -48,7 +53,45 @@ export function CommentSheet({
           )}
           {items.map((c) => (
             <div key={c.id} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5">
-              <p className="text-[11px] font-semibold mb-1">{c.name}</p>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-[11px] font-semibold">{c.name}</p>
+                <div className="flex items-center gap-1.5">
+                  {user && c.uid !== user.uid && (
+                    <button
+                      onClick={async () => {
+                        const reason = prompt("Report this comment — reason?");
+                        if (!reason) return;
+                        await submitReport({
+                          kind: "comment",
+                          targetId: `${postId}/${c.id}`,
+                          targetUid: c.uid,
+                          reporterUid: user.uid,
+                          reporterName: profile?.name || "User",
+                          reason: reason.slice(0, 200),
+                          link: `/p/${postId}`,
+                        });
+                        alert("Reported. Admin will review.");
+                      }}
+                      className="opacity-40 hover:opacity-100"
+                      aria-label="Report comment"
+                    >
+                      <Flag className="size-3.5" />
+                    </button>
+                  )}
+                  {user && (user.uid === authorUid || user.uid === c.uid) && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Delete this comment?")) return;
+                        await deleteComment(postId, c.id);
+                      }}
+                      className="opacity-40 hover:opacity-100 text-red-600"
+                      aria-label="Delete comment"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
               <p className="text-sm">{c.text}</p>
             </div>
           ))}
