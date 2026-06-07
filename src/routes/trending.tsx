@@ -262,7 +262,7 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
       </div>
 
       {commentOpen && (
-        <CommentSheet postId={item.id} onClose={() => setCommentOpen(false)} />
+        <CommentSheet postId={item.id} authorUid={item.uid} onClose={() => setCommentOpen(false)} />
       )}
     </section>
   );

@@ -1,7 +1,7 @@
 import { onValue, push, ref, set, update } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
 
-export type ReportKind = "post" | "user" | "chat" | "story";
+export type ReportKind = "post" | "user" | "chat" | "story" | "comment";
 export type Report = {
   id: string;
   kind: ReportKind;
