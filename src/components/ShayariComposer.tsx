@@ -24,6 +24,9 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
   const [pollOn, setPollOn] = useState(false);
   const [pollQ, setPollQ] = useState("");
   const [pollOpts, setPollOpts] = useState<string[]>(["", ""]);
+  const [hidePlays, setHidePlays] = useState(false);
+  const [hideLikes, setHideLikes] = useState(false);
+  const [commentsOff, setCommentsOff] = useState(false);
 
   useEffect(() => { loadShayariFont(fontId as any); }, [fontId]);
   useEffect(() => { SHAYARI_FONTS.forEach((f) => loadShayariFont(f.id as any)); }, []);
@@ -59,6 +62,9 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
         filter: "none",
         url: "",
         poll,
+        hidePlays,
+        hideLikes,
+        commentsOff,
         likeCount: 0,
         commentCount: 0,
         shareCount: 0,
@@ -166,6 +172,13 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
               </div>
             )}
           </div>
+
+          <div className="space-y-2">
+            <p className="text-[10px] uppercase tracking-widest opacity-50">Advanced</p>
+            <SettingRow label="Hide play count" on={hidePlays} onChange={() => setHidePlays(v => !v)} />
+            <SettingRow label="Hide like count" on={hideLikes} onChange={() => setHideLikes(v => !v)} />
+            <SettingRow label="Turn off comments" on={commentsOff} onChange={() => setCommentsOff(v => !v)} />
+          </div>
         </div>
 
         <div className="p-3 border-t border-black/5">
@@ -176,5 +189,16 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function SettingRow({ label, on, onChange }: { label: string; on: boolean; onChange: () => void }) {
+  return (
+    <button type="button" onClick={onChange} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl ring-1 ring-black/10 text-xs bg-white">
+      <span>{label}</span>
+      <span className={`w-9 h-5 rounded-full relative transition ${on ? "bg-sunset-600" : "bg-black/20"}`}>
+        <span className={`absolute top-0.5 size-4 rounded-full bg-white transition ${on ? "left-[18px]" : "left-0.5"}`} />
+      </span>
+    </button>
   );
 }
