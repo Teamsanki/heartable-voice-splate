@@ -29,6 +29,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TagTagRouteImport } from './routes/tag.$tag'
 import { Route as StoryIdRouteImport } from './routes/story.$id'
+import { Route as ProfileEditRouteImport } from './routes/profile.edit'
 import { Route as PIdRouteImport } from './routes/p.$id'
 import { Route as MehfilIdRouteImport } from './routes/mehfil.$id'
 import { Route as DmUidRouteImport } from './routes/dm.$uid'
@@ -135,6 +136,11 @@ const StoryIdRoute = StoryIdRouteImport.update({
   path: '/story/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileEditRoute = ProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => ProfileRoute,
+} as any)
 const PIdRoute = PIdRouteImport.update({
   id: '/p/$id',
   path: '/p/$id',
@@ -174,7 +180,7 @@ export interface FileRoutesByFullPath {
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/record': typeof RecordRoute
   '/rewards': typeof RewardsRoute
   '/search': typeof SearchRoute
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/dm/$uid': typeof DmUidRoute
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/story/$id': typeof StoryIdRoute
   '/tag/$tag': typeof TagTagRoute
   '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
@@ -201,7 +208,7 @@ export interface FileRoutesByTo {
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/record': typeof RecordRoute
   '/rewards': typeof RewardsRoute
   '/search': typeof SearchRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/dm/$uid': typeof DmUidRoute
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/story/$id': typeof StoryIdRoute
   '/tag/$tag': typeof TagTagRoute
   '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
@@ -229,7 +237,7 @@ export interface FileRoutesById {
   '/mehfil': typeof MehfilRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/record': typeof RecordRoute
   '/rewards': typeof RewardsRoute
   '/search': typeof SearchRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/dm/$uid': typeof DmUidRoute
   '/mehfil/$id': typeof MehfilIdRoute
   '/p/$id': typeof PIdRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/story/$id': typeof StoryIdRoute
   '/tag/$tag': typeof TagTagRoute
   '/api/public/notify-email': typeof ApiPublicNotifyEmailRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/dm/$uid'
     | '/mehfil/$id'
     | '/p/$id'
+    | '/profile/edit'
     | '/story/$id'
     | '/tag/$tag'
     | '/api/public/notify-email'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/dm/$uid'
     | '/mehfil/$id'
     | '/p/$id'
+    | '/profile/edit'
     | '/story/$id'
     | '/tag/$tag'
     | '/api/public/notify-email'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/dm/$uid'
     | '/mehfil/$id'
     | '/p/$id'
+    | '/profile/edit'
     | '/story/$id'
     | '/tag/$tag'
     | '/api/public/notify-email'
@@ -340,7 +352,7 @@ export interface RootRouteChildren {
   MehfilRoute: typeof MehfilRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
   PrivacyRoute: typeof PrivacyRoute
-  ProfileRoute: typeof ProfileRoute
+  ProfileRoute: typeof ProfileRouteWithChildren
   RecordRoute: typeof RecordRoute
   RewardsRoute: typeof RewardsRoute
   SearchRoute: typeof SearchRoute
@@ -496,6 +508,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/edit': {
+      id: '/profile/edit'
+      path: '/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof ProfileEditRouteImport
+      parentRoute: typeof ProfileRoute
+    }
     '/p/$id': {
       id: '/p/$id'
       path: '/p/$id'
@@ -555,6 +574,17 @@ const MehfilRouteChildren: MehfilRouteChildren = {
 const MehfilRouteWithChildren =
   MehfilRoute._addFileChildren(MehfilRouteChildren)
 
+interface ProfileRouteChildren {
+  ProfileEditRoute: typeof ProfileEditRoute
+}
+
+const ProfileRouteChildren: ProfileRouteChildren = {
+  ProfileEditRoute: ProfileEditRoute,
+}
+
+const ProfileRouteWithChildren =
+  ProfileRoute._addFileChildren(ProfileRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
@@ -567,7 +597,7 @@ const rootRouteChildren: RootRouteChildren = {
   MehfilRoute: MehfilRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
   PrivacyRoute: PrivacyRoute,
-  ProfileRoute: ProfileRoute,
+  ProfileRoute: ProfileRouteWithChildren,
   RecordRoute: RecordRoute,
   RewardsRoute: RewardsRoute,
   SearchRoute: SearchRoute,

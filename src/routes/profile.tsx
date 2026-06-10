@@ -10,7 +10,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { GuestExpiryCard } from "@/components/GuestExpiryCard";
 import { badgeFor } from "@/lib/streak";
 import { listenUserStats, listenUserPosts, type UserStats } from "@/lib/social";
-import { updateProfileName, updateProfilePhoto } from "@/lib/social";
+import { updateProfilePhoto } from "@/lib/social";
 import { uploadImage } from "@/lib/voice-api";
 
 import { Settings as SettingsIcon, Pencil, Camera, Bookmark, Search as SearchIcon } from "lucide-react";
@@ -30,8 +30,6 @@ function ProfilePage() {
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState(false);
-  const [nameDraft, setNameDraft] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
@@ -73,6 +71,9 @@ function ProfilePage() {
   const onPickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f || !user) return;
+    const okType = /^image\/(jpeg|jpg|png|webp)$/i.test(f.type);
+    if (!okType) { alert("Please upload a JPG, PNG or WEBP image."); e.target.value = ""; return; }
+    if (f.size > 5 * 1024 * 1024) { alert("Image too large — keep it under 5 MB."); e.target.value = ""; return; }
     setUploadingPhoto(true);
     try {
       const url = await uploadImage(user.uid, f, "avatars");
@@ -108,29 +109,22 @@ function ProfilePage() {
               <Camera className="size-5" />
             </span>
             {uploadingPhoto && <span className="absolute inset-0 bg-black/60 grid place-items-center text-[10px]">…</span>}
-            <input type="file" accept="image/*" onChange={onPickPhoto} className="hidden" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickPhoto} className="hidden" />
           </label>
-          <div>
-            {editingName ? (
-              <div className="flex items-center gap-2">
-                <input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} autoFocus
-                  className="px-2 py-1 rounded-lg bg-white ring-1 ring-foreground/10 text-lg outline-none" />
-                <button onClick={async () => {
-                  if (nameDraft.trim()) await updateProfileName(user.uid, nameDraft.trim());
-                  setEditingName(false);
-                }} className="text-xs font-semibold text-sunset-600">Save</button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <h1 className="font-serif italic text-3xl leading-none">{profile.name}</h1>
-                <UserBadges uid={user.uid} email={user.email} size={14} />
-                <button onClick={() => { setNameDraft(profile.name); setEditingName(true); }}
-                  className="opacity-50 hover:opacity-100"><Pencil className="size-3.5" /></button>
-              </div>
-            )}
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="font-serif italic text-3xl leading-none">{profile.name}</h1>
+              <UserBadges uid={user.uid} email={user.email} size={14} />
+              <Link to="/profile/edit" className="ml-1 opacity-60 hover:opacity-100" aria-label="Edit profile">
+                <Pencil className="size-3.5" />
+              </Link>
+            </div>
             <p className="text-xs opacity-60 mt-1">
               {isGuest ? "Guest account" : user.email || "Signed in"}
             </p>
+            <Link to="/profile/edit" className="inline-block mt-2 text-[11px] font-semibold underline opacity-80">
+              Edit profile
+            </Link>
           </div>
         </div>
 

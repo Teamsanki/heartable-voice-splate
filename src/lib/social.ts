@@ -188,6 +188,25 @@ export async function updateProfilePhoto(uid: string, photoUrl: string) {
   await update(ref(db, `${VOICE_ROOT}/${uid}/profile`), { photo: photoUrl });
 }
 
+/** Patch arbitrary profile fields (name, username, bio, link). */
+export async function updateProfileFields(
+  uid: string,
+  patch: { name?: string; username?: string; bio?: string; link?: string },
+) {
+  const clean: Record<string, any> = {};
+  if (patch.name !== undefined) clean.name = patch.name.slice(0, 40);
+  if (patch.username !== undefined)
+    clean.username = patch.username.toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 24);
+  if (patch.bio !== undefined) clean.bio = patch.bio.slice(0, 160);
+  if (patch.link !== undefined) clean.link = patch.link.slice(0, 200);
+  await update(ref(db, `${VOICE_ROOT}/${uid}/profile`), clean);
+}
+
+export async function getProfileRaw(uid: string) {
+  const s = await get(ref(db, `${VOICE_ROOT}/${uid}/profile`));
+  return (s.val() as Record<string, any>) || {};
+}
+
 /** Delete own post. */
 export async function deletePost(postId: string) {
   await update(ref(db), {
