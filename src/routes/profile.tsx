@@ -10,7 +10,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { GuestExpiryCard } from "@/components/GuestExpiryCard";
 import { badgeFor } from "@/lib/streak";
 import { listenUserStats, listenUserPosts, type UserStats } from "@/lib/social";
-import { updateProfileName, updateProfilePhoto } from "@/lib/social";
+import { updateProfilePhoto } from "@/lib/social";
 import { uploadImage } from "@/lib/voice-api";
 
 import { Settings as SettingsIcon, Pencil, Camera, Bookmark, Search as SearchIcon } from "lucide-react";
@@ -30,8 +30,6 @@ function ProfilePage() {
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState(false);
-  const [nameDraft, setNameDraft] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
