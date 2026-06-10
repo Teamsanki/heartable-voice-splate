@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Heart, MessageCircle, Bookmark, Repeat2, Play } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Repeat2, Play, Share2 } from "lucide-react";
 import { VoicePlayer } from "./VoicePlayer";
 import { CommentSheet } from "./CommentSheet";
 import { FollowButton } from "./FollowButton";
 import { PostMenu } from "./PostMenu";
 import { UserBadges } from "./UserBadges";
 import { RichText } from "./RichText";
-import { listenLiked, toggleLike } from "@/lib/social";
+import { listenLiked, toggleLike, recordShare } from "@/lib/social";
 import { listenBookmarked, toggleBookmark } from "@/lib/bookmarks";
 import { listenPostPoll, votePostPoll, recordView, repost } from "@/lib/posts";
 import { useAuth } from "@/lib/auth-context";
@@ -41,6 +41,7 @@ export type FeedItem = {
   hidePlays?: boolean;
   hideLikes?: boolean;
   commentsOff?: boolean;
+  hideShares?: boolean;
 };
 
 export function FeedCard({ item }: { item: FeedItem }) {
@@ -98,7 +99,18 @@ export function FeedCard({ item }: { item: FeedItem }) {
     } finally { setReposting(false); }
   };
 
-  // share removed per request
+  const onShare = async () => {
+    const url = `${location.origin}/p/${item.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${item.name} on Heartable`, text: item.caption || "Listen to this voice", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        alert("Link copied!");
+      }
+      await recordShare(item.id, user?.uid);
+    } catch { /* cancelled */ }
+  };
 
   return (
     <>
@@ -230,9 +242,17 @@ export function FeedCard({ item }: { item: FeedItem }) {
             </span>
           )}
           <button
+            onClick={onShare}
+            aria-label="Share"
+            className="flex items-center gap-1.5 text-xs font-medium ml-auto active:scale-95 transition"
+          >
+            <Share2 className="size-5 text-sunset-900/70" />
+            {!item.hideShares && <span className="tabular-nums">{item.shareCount || 0}</span>}
+          </button>
+          <button
             onClick={() => user && toggleBookmark(user.uid, item.id)}
             aria-label="Bookmark"
-            className="flex items-center ml-auto active:scale-95 transition"
+            className="flex items-center active:scale-95 transition"
           >
             <Bookmark className={`size-5 ${saved ? "fill-sunset-600 text-sunset-600" : "text-sunset-900/70"}`} />
           </button>
