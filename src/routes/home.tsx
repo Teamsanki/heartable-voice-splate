@@ -213,9 +213,13 @@ function Home() {
             </Link>
           <Link
             to="/profile"
-            className="size-10 rounded-full bg-sunset-900 text-sunset-50 grid place-items-center text-sm font-semibold"
+            className="size-10 rounded-full bg-sunset-900 text-sunset-50 grid place-items-center text-sm font-semibold overflow-hidden"
           >
-            {(profile?.name || "U").slice(0, 1).toUpperCase()}
+            {profile?.photo ? (
+              <img src={profile.photo} alt="me" className="w-full h-full object-cover" />
+            ) : (
+              (profile?.name || "U").slice(0, 1).toUpperCase()
+            )}
           </Link>
           </div>
         </header>
