@@ -90,6 +90,7 @@ export type PostSettings = {
   hidePlays?: boolean;
   hideLikes?: boolean;
   commentsOff?: boolean;
+  hideShares?: boolean;
 };
 
 export async function updatePostSettings(postId: string, settings: PostSettings) {
@@ -97,6 +98,7 @@ export async function updatePostSettings(postId: string, settings: PostSettings)
     hidePlays: !!settings.hidePlays,
     hideLikes: !!settings.hideLikes,
     commentsOff: !!settings.commentsOff,
+    hideShares: !!settings.hideShares,
   });
 }
 

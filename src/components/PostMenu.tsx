@@ -20,13 +20,13 @@ export function PostMenu({
   const { user, profile } = useAuth();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [s, setS] = useState({ hidePlays: false, hideLikes: false, commentsOff: false });
+  const [s, setS] = useState({ hidePlays: false, hideLikes: false, commentsOff: false, hideShares: false });
 
   useEffect(() => {
     if (!settingsOpen) return;
     return onValue(ref(db, `feed/${postId}`), (snap) => {
       const v = snap.val() || {};
-      setS({ hidePlays: !!v.hidePlays, hideLikes: !!v.hideLikes, commentsOff: !!v.commentsOff });
+      setS({ hidePlays: !!v.hidePlays, hideLikes: !!v.hideLikes, commentsOff: !!v.commentsOff, hideShares: !!v.hideShares });
     });
   }, [settingsOpen, postId]);
 
@@ -62,7 +62,7 @@ export function PostMenu({
     setOpen(false);
   };
 
-  const toggle = async (k: "hidePlays" | "hideLikes" | "commentsOff") => {
+  const toggle = async (k: "hidePlays" | "hideLikes" | "commentsOff" | "hideShares") => {
     const next = { ...s, [k]: !s[k] };
     setS(next);
     await updatePostSettings(postId, next);
@@ -99,6 +99,7 @@ export function PostMenu({
             <Row label="Hide play count" on={s.hidePlays} onChange={() => toggle("hidePlays")} />
             <Row label="Hide like count" on={s.hideLikes} onChange={() => toggle("hideLikes")} />
             <Row label="Turn off comments" on={s.commentsOff} onChange={() => toggle("commentsOff")} />
+            <Row label="Hide share count" on={s.hideShares} onChange={() => toggle("hideShares")} />
             <button onClick={() => setSettingsOpen(false)} className="w-full py-2.5 rounded-full bg-sunset-900 text-sunset-50 text-sm font-semibold mt-2">Done</button>
           </div>
         </div>

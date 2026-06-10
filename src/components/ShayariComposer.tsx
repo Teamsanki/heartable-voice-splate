@@ -27,6 +27,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
   const [hidePlays, setHidePlays] = useState(false);
   const [hideLikes, setHideLikes] = useState(false);
   const [commentsOff, setCommentsOff] = useState(false);
+  const [hideShares, setHideShares] = useState(false);
 
   useEffect(() => { loadShayariFont(fontId as any); }, [fontId]);
   useEffect(() => { SHAYARI_FONTS.forEach((f) => loadShayariFont(f.id as any)); }, []);
@@ -65,6 +66,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
         hidePlays,
         hideLikes,
         commentsOff,
+        hideShares,
         likeCount: 0,
         commentCount: 0,
         shareCount: 0,
@@ -178,6 +180,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
             <SettingRow label="Hide play count" on={hidePlays} onChange={() => setHidePlays(v => !v)} />
             <SettingRow label="Hide like count" on={hideLikes} onChange={() => setHideLikes(v => !v)} />
             <SettingRow label="Turn off comments" on={commentsOff} onChange={() => setCommentsOff(v => !v)} />
+            <SettingRow label="Hide share count" on={hideShares} onChange={() => setHideShares(v => !v)} />
           </div>
         </div>
 
