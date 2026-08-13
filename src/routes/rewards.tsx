@@ -41,7 +41,7 @@ function RewardsPage() {
       </header>
 
       {!m ? (
-        <div className="bg-white rounded-2xl p-6 ring-1 ring-foreground/5 text-center">
+        <div className="bg-card rounded-2xl p-6 ring-1 ring-foreground/5 text-center">
           <Sparkles className="size-8 mx-auto text-sunset-600 mb-2" />
           <p className="font-serif italic text-xl">This week's drop is being prepared…</p>
           <p className="text-xs opacity-60 mt-1">Check back soon!</p>
@@ -67,7 +67,7 @@ function RewardsPage() {
               const prog = progressFor(t.metric, t.target);
               const done = prog >= 1;
               return (
-                <div key={t.id} className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5">
+                <div key={t.id} className="bg-card rounded-2xl p-4 ring-1 ring-foreground/5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <p className="font-semibold text-sm">{t.title}</p>
@@ -97,7 +97,7 @@ function RewardsPage() {
           const entered = !!(g.entries && user && g.entries[user.uid]);
           const ended = g.endsAt && g.endsAt < Date.now();
           return (
-            <div key={g.id} className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
+            <div key={g.id} className="bg-card rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-semibold text-sm">{g.title}</p>
                 <span className="text-[10px] uppercase tracking-widest bg-sunset-900 text-sunset-50 px-2 py-0.5 rounded-full">{g.prize}</span>

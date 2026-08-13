@@ -80,7 +80,7 @@ function GuidelinesPage() {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5">
+    <section className="bg-card rounded-2xl p-4 ring-1 ring-foreground/5">
       <h2 className="font-serif italic text-lg mb-2">{title}</h2>
       <div className="opacity-90">{children}</div>
     </section>

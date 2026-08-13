@@ -20,7 +20,7 @@ export function GuestExpiryCard({ expiresAt }: { expiresAt: number }) {
   const pct = Math.max(0, Math.min(100, (remaining / (7 * 86400000)) * 100));
 
   return (
-    <div className="bg-white rounded-2xl p-5 ring-1 ring-foreground/5 space-y-3">
+    <div className="bg-card rounded-2xl p-5 ring-1 ring-foreground/5 space-y-3">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-[0.2em] opacity-60">Guest Timer</p>

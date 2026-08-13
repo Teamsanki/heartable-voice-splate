@@ -121,7 +121,7 @@ function MehfilCircle() {
             <p className="text-center text-sm opacity-50 py-6">Koi awaaz nahi yahan.</p>
           )}
           {msgs.map((m) => (
-            <div key={m.id} className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
+            <div key={m.id} className="bg-card rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
               <div className="flex items-center gap-2">
                 <div className="size-6 rounded-full bg-sunset-200 grid place-items-center text-[10px] font-semibold overflow-hidden">
                   {m.photo ? <img src={m.photo} className="w-full h-full object-cover" /> : m.name.slice(0, 1)}

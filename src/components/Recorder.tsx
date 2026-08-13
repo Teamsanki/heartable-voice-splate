@@ -57,7 +57,7 @@ export function Recorder({
           className="relative size-24 rounded-full bg-sunset-600 shadow-xl flex items-center justify-center text-white ring-4 ring-white transition-transform active:scale-95"
         >
           <div
-            className={`bg-white transition-all ${
+            className={`bg-card transition-all ${
               state === "recording" ? "size-7 rounded-full" : "size-5 rounded-[6px]"
             }`}
           />

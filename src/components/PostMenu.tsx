@@ -92,7 +92,7 @@ export function PostMenu({
         </>
       )}
       {settingsOpen && (
-        <div className="fixed inset-0 z-[70] bg-black/50 grid place-items-center p-4" onClick={() => setSettingsOpen(false)}>
+        <div className="fixed inset-0 z-[70] bg-foreground/50 grid place-items-center p-4" onClick={() => setSettingsOpen(false)}>
           <div className="w-full max-w-sm bg-card text-card-foreground rounded-2xl p-5 space-y-3" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-serif italic text-xl">Post settings</h3>
             <p className="text-[11px] opacity-60">Control how others see this post.</p>
@@ -124,7 +124,7 @@ function Row({ label, on, onChange }: { label: string; on: boolean; onChange: ()
     <button onClick={onChange} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl ring-1 ring-foreground/10 text-sm">
       <span>{label}</span>
       <span className={`w-9 h-5 rounded-full relative transition ${on ? "bg-sunset-600" : "bg-foreground/20"}`}>
-        <span className={`absolute top-0.5 size-4 rounded-full bg-white transition ${on ? "left-[18px]" : "left-0.5"}`} />
+        <span className={`absolute top-0.5 size-4 rounded-full bg-card transition ${on ? "left-[18px]" : "left-0.5"}`} />
       </span>
     </button>
   );

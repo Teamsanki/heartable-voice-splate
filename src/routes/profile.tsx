@@ -129,7 +129,7 @@ function ProfilePage() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-4 gap-2 bg-white rounded-2xl p-3 ring-1 ring-foreground/5 text-center">
+        <div className="grid grid-cols-4 gap-2 bg-card rounded-2xl p-3 ring-1 ring-foreground/5 text-center">
           {[
             { k: stats.followers, l: "Followers" },
             { k: stats.following, l: "Following" },
@@ -156,7 +156,7 @@ function ProfilePage() {
         )}
 
         {isGuest && (
-          <div className="bg-white rounded-2xl p-5 ring-1 ring-foreground/5 space-y-3">
+          <div className="bg-card rounded-2xl p-5 ring-1 ring-foreground/5 space-y-3">
             <h2 className="font-serif italic text-xl">Save your streaks</h2>
             <p className="text-xs opacity-70">
               Guest mode 7 din ka hai. Google se bind kar — data tere paas hi rahega,
@@ -165,7 +165,7 @@ function ProfilePage() {
             <button
               onClick={upgradeGoogle}
               disabled={busy}
-              className="w-full py-3 rounded-full bg-white ring-1 ring-foreground/10 text-sm font-semibold hover:bg-sunset-50 transition disabled:opacity-50"
+              className="w-full py-3 rounded-full bg-card ring-1 ring-foreground/10 text-sm font-semibold hover:bg-sunset-50 transition disabled:opacity-50"
             >
               🔗 Link with Google
             </button>

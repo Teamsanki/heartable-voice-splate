@@ -9,6 +9,7 @@ import { FollowButton } from "@/components/FollowButton";
 import { CommentSheet } from "@/components/CommentSheet";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { listenMyBlocks } from "@/lib/blocks";
+import { bumpAffinity, listenAffinity, rankForYou } from "@/lib/affinity";
 import type { VoiceFilter } from "@/lib/audio-filters";
 
 type Item = {
@@ -41,6 +42,14 @@ function Trending() {
   const [items, setItems] = useState<Item[]>([]);
   const { user } = useAuth();
   const [blocks, setBlocks] = useState<Set<string>>(new Set());
+  const [affinity, setAffinity] = useState<Record<string, number>>({});
+  // Stable per-visit seed → shuffled order that doesn't jump while scrolling
+  const [seed] = useState(() => Math.random().toString(36).slice(2));
+
+  useEffect(() => {
+    if (!user) return;
+    return listenAffinity(user.uid, setAffinity);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -52,18 +61,12 @@ function Trending() {
     const unsub = onValue(q, (snap) => {
       const arr: Item[] = [];
       snap.forEach((c) => { arr.push({ id: c.key!, ...(c.val() as any) }); });
-      // simple trending = recency + likes
-      arr.sort((a, b) => {
-        const sa = (a.likeCount || 0) * 5 + (a.createdAt || 0) / 1e9;
-        const sb = (b.likeCount || 0) * 5 + (b.createdAt || 0) / 1e9;
-        return sb - sa;
-      });
       setItems(arr);
     });
     return () => unsub();
   }, []);
 
-  const visible = items.filter((it) => !blocks.has(it.uid));
+  const visible = rankForYou(items.filter((it) => !blocks.has(it.uid)), affinity, seed);
 
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden">
@@ -86,7 +89,7 @@ function Trending() {
       >
         {visible.length === 0 && (
           <div className="h-[100dvh] grid place-items-center">
-            <p className="opacity-60 text-sm">Abhi koi awaaz nahi. Pehli tu bhej!</p>
+            <p className="opacity-60 text-sm">No voices yet — be the first!</p>
           </div>
         )}
         {visible.map((it, idx) => (
@@ -121,6 +124,7 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
           const a = audioRef.current;
           if (!a) continue;
           if (e.intersectionRatio > 0.7) {
+            if (user) bumpAffinity(user.uid, item.category, 1).catch(() => {});
             a.currentTime = 0;
             a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
           } else {
@@ -133,7 +137,7 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [user, item.category]);
 
   const onTogglePlay = () => {
     const a = audioRef.current;
@@ -145,6 +149,7 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
   const onLike = async () => {
     if (!user) return;
     await toggleLike(item.id, user.uid);
+    bumpAffinity(user.uid, item.category, 3).catch(() => {});
   };
 
   const onShare = async () => {
