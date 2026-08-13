@@ -16,6 +16,9 @@ export const Route = createFileRoute("/story/$id")({
 });
 
 type Story = {
+  kind?: "voice" | "post";
+  postId?: string;
+  postPreview?: { name?: string; text?: string; caption?: string; bgCss?: string; fgColor?: string } | null;
   url: string;
   filter: VoiceFilter;
   name: string;
@@ -172,6 +175,23 @@ function StoryPage() {
       </div>
 
       <div className="flex-1 grid place-items-center">
+        {story.kind === "post" ? (
+          <button
+            onClick={() => story.postId && navigate({ to: "/p/$id", params: { id: story.postId } })}
+            className="w-full max-w-sm rounded-3xl overflow-hidden text-left"
+            style={{
+              background: story.postPreview?.bgCss || "linear-gradient(135deg,#0a0a0a,#1a1a1a)",
+              color: story.postPreview?.fgColor || "#fff8ee",
+            }}
+          >
+            <div className="p-8 min-h-[320px] grid place-items-center text-center">
+              <p className="text-2xl whitespace-pre-wrap break-words">
+                {story.postPreview?.text || story.postPreview?.caption || "🎙️ Voice post"}
+              </p>
+            </div>
+            <p className="text-[11px] px-4 py-3 bg-black/25">Tap to open post</p>
+          </button>
+        ) : (
         <div className="bg-white/10 backdrop-blur rounded-3xl p-8 w-full max-w-sm">
           <VoicePlayer
             url={story.url}
@@ -186,6 +206,7 @@ function StoryPage() {
             <p className="text-[10px] mt-4 text-center opacity-60">No more replays</p>
           )}
         </div>
+        )}
       </div>
 
       <div className="flex justify-center gap-3 pb-6">

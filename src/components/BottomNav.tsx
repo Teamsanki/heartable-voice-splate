@@ -1,12 +1,16 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Flame, Mic, MessageCircle, User, Gift } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { isFounder } from "@/lib/roles";
+import { listenFriends } from "@/lib/social";
+import { listenThreadUnread } from "@/lib/dm";
 
 export function BottomNav() {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const isAdmin = isFounder(user?.email);
+  const unread = useDMUnread(user?.uid);
   const isActive = (p: string) => pathname === p;
 
   const Item = ({ to, icon: Icon, label }: any) => (
@@ -37,7 +41,14 @@ export function BottomNav() {
       >
         <Mic className="size-5" />
       </Link>
-      <Item to="/dm" icon={MessageCircle} label="Chats" />
+      <div className="relative">
+        <Item to="/dm" icon={MessageCircle} label="Chats" />
+        {unread > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold grid place-items-center tabular-nums">
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
+      </div>
       <Item to="/rewards" icon={Gift} label="Rewards" />
       {isAdmin ? (
         <Link
@@ -56,4 +67,25 @@ export function BottomNav() {
       )}
     </nav>
   );
+}
+
+function useDMUnread(uid?: string) {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!uid) return;
+    const perThread: Record<string, () => void> = {};
+    const off = listenFriends(uid, (ids) => {
+      for (const id of Object.keys(perThread)) {
+        if (!ids.includes(id)) { perThread[id](); delete perThread[id]; }
+      }
+      for (const peer of ids) {
+        if (perThread[peer]) continue;
+        perThread[peer] = listenThreadUnread(uid, peer, (n) =>
+          setCounts((c) => ({ ...c, [peer]: n })),
+        );
+      }
+    });
+    return () => { off(); Object.values(perThread).forEach((f) => f()); };
+  }, [uid]);
+  return Object.values(counts).reduce((a, b) => a + b, 0);
 }
