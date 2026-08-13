@@ -15,11 +15,20 @@ const BG_PRESETS = [
   { id: "ruby", label: "Ruby", bg: "linear-gradient(135deg,#3a000a,#8b0030)", fg: "#ffe8ec" },
 ];
 
+const RATIOS = [
+  { id: "1:1", label: "Square 1:1", cls: "aspect-square" },
+  { id: "4:5", label: "Portrait 4:5", cls: "aspect-[4/5]" },
+  { id: "9:16", label: "Story 9:16", cls: "aspect-[9/16]" },
+  { id: "16:9", label: "Wide 16:9", cls: "aspect-[16/9]" },
+  { id: "auto", label: "Auto fit", cls: "min-h-[280px]" },
+];
+
 export function ShayariComposer({ onClose }: { onClose: () => void }) {
   const { user, profile } = useAuth();
   const [text, setText] = useState("");
   const [fontId, setFontId] = useState<string>(SHAYARI_FONTS[0].id);
   const [bgId, setBgId] = useState<string>(BG_PRESETS[0].id);
+  const [ratio, setRatio] = useState<string>("1:1");
   const [busy, setBusy] = useState(false);
   const [pollOn, setPollOn] = useState(false);
   const [pollQ, setPollQ] = useState("");
@@ -33,6 +42,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
   useEffect(() => { SHAYARI_FONTS.forEach((f) => loadShayariFont(f.id as any)); }, []);
 
   const bg = useMemo(() => BG_PRESETS.find((b) => b.id === bgId)!, [bgId]);
+  const ratioCls = useMemo(() => RATIOS.find((r) => r.id === ratio)?.cls || "aspect-square", [ratio]);
 
   const post = async () => {
     if (!user || !profile || !text.trim()) return;
@@ -58,6 +68,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
         bgId,
         bgCss: bg.bg,
         fgColor: bg.fg,
+        ratio,
         category: "shayari",
         durationSec: 0,
         filter: "none",
@@ -92,7 +103,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
         <div className="p-4 overflow-y-auto flex-1 space-y-4">
           {/* Live preview */}
           <div
-            className="aspect-[4/5] rounded-2xl grid place-items-center p-6 text-center overflow-hidden"
+            className={`${ratioCls} rounded-2xl grid place-items-center p-6 text-center overflow-hidden`}
             style={{ background: bg.bg, color: bg.fg }}
           >
             <p
@@ -111,6 +122,18 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
             placeholder="Write your shayari here…"
             className="w-full px-4 py-3 rounded-xl bg-black/5 text-sm outline-none resize-none"
           />
+
+          <div>
+            <p className="text-[10px] uppercase tracking-widest opacity-50 mb-2">Size</p>
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {RATIOS.map((r) => (
+                <button key={r.id} onClick={() => setRatio(r.id)}
+                  className={`px-3 py-2 rounded-full whitespace-nowrap text-xs ring-1 transition ${ratio === r.id ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-card ring-black/10"}`}>
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div>
             <p className="text-[10px] uppercase tracking-widest opacity-50 mb-2">Style</p>
