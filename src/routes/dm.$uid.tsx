@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { onValue, ref, update } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -9,6 +9,11 @@ import { postSnap } from "@/lib/voice-api";
 import { areFriends } from "@/lib/social";
 import { isMutuallyBlocked } from "@/lib/blocks";
 import { submitReport } from "@/lib/reports";
+import {
+  clearChatForMe, listenChatMuted, listenClearedAt, listenTyping,
+  markThreadRead, sendTextDM, setChatMuted, setTyping, type DMMessage,
+} from "@/lib/dm";
+import { Bell, BellOff, Send, Trash2 } from "lucide-react";
 import type { VoiceFilter } from "@/lib/audio-filters";
 
 export const Route = createFileRoute("/dm/$uid")({
@@ -16,18 +21,7 @@ export const Route = createFileRoute("/dm/$uid")({
   component: DMThread,
 });
 
-type Snap = {
-  id: string;
-  uid: string;
-  name: string;
-  to: string;
-  url: string;
-  filter: VoiceFilter;
-  durationSec: number;
-  listened: boolean;
-  createdAt: number;
-  expiresAt: number;
-};
+type Snap = DMMessage;
 
 function DMThread() {
   const { uid: peerUid } = Route.useParams();
@@ -36,6 +30,11 @@ function DMThread() {
   const [peerName, setPeerName] = useState("Friend");
   const [snaps, setSnaps] = useState<Snap[]>([]);
   const [busy, setBusy] = useState(false);
+  const [text, setText] = useState("");
+  const [peerTyping, setPeerTyping] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [clearedAt, setClearedAt] = useState(0);
+  const typingTimer = useRef<any>(null);
   const [gate, setGate] = useState<"loading" | "ok" | "not-friends" | "blocked">("loading");
 
   const threadId = user ? [user.uid, peerUid].sort().join("_") : null;
@@ -58,21 +57,54 @@ function DMThread() {
   }, [user, peerUid]);
 
   useEffect(() => {
+    if (!user) return;
+    const u1 = listenTyping(user.uid, peerUid, setPeerTyping);
+    const u2 = listenChatMuted(user.uid, peerUid, setMuted);
+    const u3 = listenClearedAt(user.uid, peerUid, setClearedAt);
+    return () => { u1(); u2(); u3(); };
+  }, [user, peerUid]);
+
+  useEffect(() => {
     if (!threadId || !user) return;
     const unsub = onValue(ref(db, `dm/${threadId}/messages`), (snap) => {
       const out: Snap[] = [];
       const now = Date.now();
       snap.forEach((m) => {
         const v = m.val();
-        if (v.expiresAt < now) return;
-        // hide listened snaps that were sent TO me
-        if (v.listened && v.to === user.uid) return;
-        out.push({ id: m.key!, ...v });
+        const kind: string = v.kind || "voice";
+        if (v.createdAt <= clearedAt) return;
+        if (kind === "voice") {
+          if ((v.expiresAt || 0) < now) return;
+          if (v.listened && v.to === user.uid) return;
+        }
+        out.push({ id: m.key!, kind, ...v });
       });
-      setSnaps(out.sort((a, b) => b.createdAt - a.createdAt));
+      setSnaps(out.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)));
     });
     return () => unsub();
-  }, [threadId, user]);
+  }, [threadId, user, clearedAt]);
+
+  // Read receipts — mark peer's messages as read while the thread is open
+  useEffect(() => {
+    if (!user || gate !== "ok") return;
+    markThreadRead(user.uid, peerUid).catch(() => {});
+  }, [user, peerUid, gate, snaps.length]);
+
+  const onType = (v: string) => {
+    setText(v);
+    if (!user) return;
+    setTyping(user.uid, peerUid, true).catch(() => {});
+    clearTimeout(typingTimer.current);
+    typingTimer.current = setTimeout(() => setTyping(user.uid, peerUid, false).catch(() => {}), 2500);
+  };
+
+  const sendText = async () => {
+    if (!user || !profile || !text.trim()) return;
+    const t = text;
+    setText("");
+    await sendTextDM(user.uid, profile.name, peerUid, t);
+    setTyping(user.uid, peerUid, false).catch(() => {});
+  };
 
   const markListened = async (id: string, toMe: boolean) => {
     if (!toMe || !threadId) return;
@@ -109,6 +141,7 @@ function DMThread() {
           <button onClick={() => navigate({ to: "/dm" })} className="text-sm opacity-60">
             ← Back
           </button>
+          <div className="flex items-center gap-2">
           <button
             onClick={async () => {
               const reason = prompt("Report this user/chat? Please tell us why:");
@@ -123,8 +156,22 @@ function DMThread() {
               });
               alert("Report submitted.");
             }}
-            className="text-[11px] px-3 py-1 rounded-full bg-red-100 text-red-700"
+            className="text-[11px] px-3 py-1 rounded-full bg-red-500/15 text-red-600"
           >🚩 Report</button>
+          <button
+            onClick={() => setChatMuted(user.uid, peerUid, !muted)}
+            aria-label={muted ? "Unmute chat" : "Mute chat"}
+            className="size-8 rounded-full bg-foreground/5 grid place-items-center"
+          >{muted ? <BellOff className="size-4" /> : <Bell className="size-4" />}</button>
+          <button
+            onClick={async () => {
+              if (!confirm("Delete this chat for you?")) return;
+              await clearChatForMe(user.uid, peerUid);
+            }}
+            aria-label="Delete chat"
+            className="size-8 rounded-full bg-foreground/5 grid place-items-center"
+          ><Trash2 className="size-4" /></button>
+          </div>
         </div>
         <h1 className="font-serif italic text-3xl">{peerName}</h1>
 
@@ -156,25 +203,72 @@ function DMThread() {
           )}
           {snaps.map((s) => {
             const fromMe = s.uid === user.uid;
+            const bubble = `rounded-2xl p-3.5 ring-1 ring-foreground/5 ${fromMe ? "bg-sunset-200 ml-8" : "bg-card mr-8"}`;
+            if (s.kind === "text") {
+              return (
+                <div key={s.id} className={bubble}>
+                  <p className="text-sm whitespace-pre-wrap break-words">{s.text}</p>
+                  <p className="text-[10px] opacity-50 mt-1 text-right">
+                    {fromMe ? (s.read ? "Seen" : "Sent") : ""}
+                  </p>
+                </div>
+              );
+            }
+            if (s.kind === "post") {
+              const pv = s.postPreview || ({} as any);
+              return (
+                <div key={s.id} className={bubble}>
+                  <p className="text-[10px] opacity-50 mb-2">{fromMe ? "You shared a post" : `${s.name} shared a post`}</p>
+                  <Link
+                    to="/p/$id"
+                    params={{ id: s.postId! }}
+                    className="block rounded-xl overflow-hidden"
+                    style={{ background: pv.bgCss || "linear-gradient(135deg,#0a0a0a,#1a1a1a)", color: pv.fgColor || "#fff8ee" }}
+                  >
+                    <div className="p-4 min-h-[110px] grid place-items-center text-center">
+                      <p className="text-sm line-clamp-4">{pv.text || pv.caption || "🎙️ Voice post"}</p>
+                    </div>
+                  </Link>
+                  {s.text && <p className="text-sm mt-2">{s.text}</p>}
+                  <p className="text-[10px] opacity-50 mt-1 text-right">{fromMe ? (s.read ? "Seen" : "Sent") : ""}</p>
+                </div>
+              );
+            }
             return (
-              <div
-                key={s.id}
-                className={`rounded-2xl p-4 ring-1 ring-foreground/5 ${
-                  fromMe ? "bg-sunset-200 ml-8" : "bg-white mr-8"
-                }`}
-              >
+              <div key={s.id} className={bubble}>
                 <p className="text-[10px] opacity-50 mb-2">
                   {fromMe ? "You" : s.name} · {s.filter} · disappears once heard
                 </p>
                 <VoicePlayer
-                  url={s.url}
-                  filter={s.filter}
-                  durationSec={s.durationSec}
+                  url={s.url!}
+                  filter={s.filter as VoiceFilter}
+                  durationSec={s.durationSec || 0}
                   onPlayComplete={() => markListened(s.id, !fromMe)}
                 />
               </div>
             );
           })}
+          {peerTyping && (
+            <p className="text-[11px] opacity-60 pl-1">{peerName} is typing…</p>
+          )}
+        </div>
+
+        <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/90 backdrop-blur border-t border-foreground/10">
+          <div className="w-full sm:max-w-[480px] mx-auto flex gap-2">
+            <input
+              value={text}
+              onChange={(e) => onType(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") sendText(); }}
+              placeholder="Message…"
+              className="flex-1 px-4 py-3 rounded-full bg-foreground/5 text-sm outline-none"
+            />
+            <button
+              onClick={sendText}
+              disabled={!text.trim()}
+              aria-label="Send"
+              className="size-11 rounded-full bg-sunset-600 text-white grid place-items-center disabled:opacity-40"
+            ><Send className="size-4" /></button>
+          </div>
         </div>
       </div>
     </div>
