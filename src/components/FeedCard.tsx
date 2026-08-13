@@ -6,7 +6,9 @@ import { FollowButton } from "./FollowButton";
 import { PostMenu } from "./PostMenu";
 import { UserBadges } from "./UserBadges";
 import { RichText } from "./RichText";
-import { listenLiked, toggleLike, recordShare } from "@/lib/social";
+import { ShareSheet } from "./ShareSheet";
+import { listenLiked, toggleLike } from "@/lib/social";
+import { bumpAffinity } from "@/lib/affinity";
 import { listenBookmarked, toggleBookmark } from "@/lib/bookmarks";
 import { listenPostPoll, votePostPoll, recordView, repost } from "@/lib/posts";
 import { useAuth } from "@/lib/auth-context";
@@ -38,6 +40,7 @@ export type FeedItem = {
   repostOf?: string;
   repostUid?: string;
   repostName?: string;
+  ratio?: string;
   hidePlays?: boolean;
   hideLikes?: boolean;
   commentsOff?: boolean;
@@ -51,6 +54,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
   const [open, setOpen] = useState(false);
   const [poll, setPoll] = useState<{ counts: Record<number, number>; myVote: number | null; total: number }>({ counts: {}, myVote: null, total: 0 });
   const [reposting, setReposting] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -83,6 +87,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
   const onLike = async () => {
     if (!user) return;
     await toggleLike(item.id, user.uid);
+    bumpAffinity(user.uid, item.category, 3).catch(() => {});
   };
 
   const onRepost = async () => {
@@ -99,18 +104,11 @@ export function FeedCard({ item }: { item: FeedItem }) {
     } finally { setReposting(false); }
   };
 
-  const onShare = async () => {
-    const url = `${location.origin}/p/${item.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${item.name} on Heartable`, text: item.caption || "Listen to this voice", url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        alert("Link copied!");
-      }
-      await recordShare(item.id, user?.uid);
-    } catch { /* cancelled */ }
-  };
+  const ratioClass =
+    item.ratio === "1:1" ? "aspect-square" :
+    item.ratio === "4:5" ? "aspect-[4/5]" :
+    item.ratio === "9:16" ? "aspect-[9/16]" :
+    item.ratio === "16:9" ? "aspect-[16/9]" : "min-h-[280px]";
 
   return (
     <>
@@ -156,7 +154,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
 
         {item.type === "shayari" ? (
           <div
-            className="rounded-2xl min-h-[280px] grid place-items-center p-6 text-center"
+            className={`rounded-2xl ${ratioClass} grid place-items-center p-6 text-center overflow-hidden`}
             style={{ background: item.bgCss || "linear-gradient(135deg,#0a0a0a,#1a1a1a)", color: item.fgColor || "#fff8ee" }}
           >
             <p
@@ -242,7 +240,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
             </span>
           )}
           <button
-            onClick={onShare}
+            onClick={() => setShareOpen(true)}
             aria-label="Share"
             className="flex items-center gap-1.5 text-xs font-medium ml-auto active:scale-95 transition"
           >
@@ -259,6 +257,22 @@ export function FeedCard({ item }: { item: FeedItem }) {
         </div>
       </article>
       {open && <CommentSheet postId={item.id} authorUid={item.uid} onClose={() => setOpen(false)} />}
+      {shareOpen && (
+        <ShareSheet
+          postId={item.id}
+          preview={{
+            name: item.name,
+            text: item.text,
+            caption: item.caption,
+            bgCss: item.bgCss,
+            fgColor: item.fgColor,
+            fontId: item.fontId,
+            type: item.type,
+            url: item.url,
+          }}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </>
   );
 }
