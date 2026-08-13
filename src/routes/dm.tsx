@@ -11,6 +11,7 @@ import { listenPresence } from "@/lib/presence";
 import { Plus, Search, MessageCircle } from "lucide-react";
 import { MobileShell } from "@/components/MobileShell";
 import { UserBadges } from "@/components/UserBadges";
+import { listenThreadUnread } from "@/lib/dm";
 
 export const Route = createFileRoute("/dm")({
   head: () => ({ meta: [{ title: "Chats — Heartable" }] }),
@@ -35,7 +36,13 @@ function DMList() {
         const tid = [user.uid, uid].sort().join("_");
         const lastSnap = await get(ref(db, `dm/${tid}/messages`));
         let lastMsgAt = 0; let lastMsg = "";
-        lastSnap.forEach((m) => { const v = m.val(); if ((v.createdAt || 0) > lastMsgAt) { lastMsgAt = v.createdAt; lastMsg = "🎙️ Voice note"; } });
+        lastSnap.forEach((m) => {
+          const v = m.val();
+          if ((v.createdAt || 0) > lastMsgAt) {
+            lastMsgAt = v.createdAt;
+            lastMsg = v.kind === "text" ? String(v.text || "") : v.kind === "post" ? "📮 Shared a post" : "🎙️ Voice note";
+          }
+        });
         return { uid, name: p.name || "Friend", photo: p.photo || null, email: p.email || null, lastMsg, lastMsgAt };
       }));
       setFriends(list.sort((a, b) => (b.lastMsgAt || 0) - (a.lastMsgAt || 0)));
@@ -120,8 +127,14 @@ function DMList() {
 }
 
 function FriendRow({ p }: { p: Person }) {
+  const { user } = useAuth();
   const [online, setOnline] = useState(false);
+  const [unread, setUnread] = useState(0);
   useEffect(() => listenPresence(p.uid, (pr) => setOnline(pr.online)), [p.uid]);
+  useEffect(() => {
+    if (!user) return;
+    return listenThreadUnread(user.uid, p.uid, setUnread);
+  }, [user, p.uid]);
   return (
     <Link
       to="/dm/$uid"
@@ -139,9 +152,17 @@ function FriendRow({ p }: { p: Person }) {
           {p.name}
           <UserBadges uid={p.uid} email={p.email} size={11} />
         </p>
-        <p className="text-[11px] opacity-50 truncate">{p.lastMsg || (online ? "Online" : "Tap to send a voice note")}</p>
+        <p className={`text-[11px] truncate ${unread ? "font-semibold opacity-90" : "opacity-50"}`}>
+          {p.lastMsg || (online ? "Online" : "Tap to start the conversation")}
+        </p>
       </div>
-      <span className="text-sunset-600 text-lg">→</span>
+      {unread > 0 ? (
+        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center tabular-nums">
+          {unread > 99 ? "99+" : unread}
+        </span>
+      ) : (
+        <span className="text-sunset-600 text-lg">→</span>
+      )}
     </Link>
   );
 }
