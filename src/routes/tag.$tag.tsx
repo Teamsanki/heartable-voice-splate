@@ -34,7 +34,7 @@ function TagPage() {
     <MobileShell>
       <div className="px-4 pt-4 pb-32">
         <div className="flex items-center gap-2 mb-4">
-          <Link to="/home" className="size-9 rounded-full bg-black/5 grid place-items-center"><ChevronLeft className="size-4" /></Link>
+          <Link to="/home" className="size-9 rounded-full bg-foreground/5 grid place-items-center"><ChevronLeft className="size-4" /></Link>
           <div>
             <p className="text-[10px] uppercase tracking-[0.25em] opacity-50">Hashtag</p>
             <h1 className="font-serif italic text-2xl flex items-center gap-1"><Hash className="size-5" />{tag}</h1>

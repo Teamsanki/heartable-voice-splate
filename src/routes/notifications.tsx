@@ -59,7 +59,7 @@ function NotifRow({ n }: { n: Notif }) {
     <Bell className="size-4 text-sunset-600" />;
 
   const body = (
-    <div className={`flex items-center gap-3 px-3 py-3 bg-white rounded-xl ring-1 ring-foreground/5 ${n.read ? "opacity-70" : ""}`}>
+    <div className={`flex items-center gap-3 px-3 py-3 bg-card rounded-xl ring-1 ring-foreground/5 ${n.read ? "opacity-70" : ""}`}>
       <div className="size-9 rounded-full bg-sunset-100 grid place-items-center">{icon}</div>
       <div className="flex-1 min-w-0">
         <p className="text-sm leading-tight"><b>{n.fromName || "Heartable"}</b> {n.text || ""}</p>

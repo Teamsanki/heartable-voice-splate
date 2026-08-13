@@ -62,7 +62,7 @@ function MehfilList() {
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Nayi mehfil ka naam…"
             maxLength={40}
-            className="flex-1 px-4 py-3 rounded-2xl bg-white ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600"
+            className="flex-1 px-4 py-3 rounded-2xl bg-card ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600"
           />
           <button
             onClick={create}
@@ -84,7 +84,7 @@ function MehfilList() {
               key={c.id}
               to="/mehfil/$id"
               params={{ id: c.id }}
-              className="block bg-white rounded-2xl p-4 ring-1 ring-foreground/5 flex items-center justify-between"
+              className="block bg-card rounded-2xl p-4 ring-1 ring-foreground/5 flex items-center justify-between"
             >
               <div>
                 <p className="font-serif italic text-lg">{c.name}</p>

@@ -57,7 +57,7 @@ function SettingsPage() {
         <div className="grid grid-cols-3 gap-2">
           {(["dark", "light", "system"] as Theme[]).map((t) => (
             <button key={t} onClick={() => setT(t)}
-              className={`py-2.5 rounded-xl text-xs font-medium ring-1 ${theme === t ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-white ring-foreground/10"}`}>
+              className={`py-2.5 rounded-xl text-xs font-medium ring-1 ${theme === t ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-card ring-foreground/10"}`}>
               {t === "dark" ? <Moon className="size-4 inline mr-1" /> : t === "light" ? <Sun className="size-4 inline mr-1" /> : "💻"} {t}
             </button>
           ))}
@@ -75,7 +75,7 @@ function SettingsPage() {
         ) : (
           <div className="space-y-1">
             {Array.from(blocks).map((uid) => (
-              <div key={uid} className="flex items-center justify-between px-3 py-2 bg-white rounded-xl ring-1 ring-foreground/5">
+              <div key={uid} className="flex items-center justify-between px-3 py-2 bg-card rounded-xl ring-1 ring-foreground/5">
                 <div className="flex items-center gap-2">
                   <UserX className="size-4 opacity-60" />
                   <span className="text-sm">{blockNames[uid] || "User"}</span>
@@ -114,7 +114,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 function Row({ icon, label, right }: { icon: React.ReactNode; label: string; right: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-3 py-3 bg-white rounded-xl ring-1 ring-foreground/5">
+    <div className="flex items-center justify-between px-3 py-3 bg-card rounded-xl ring-1 ring-foreground/5">
       <div className="flex items-center gap-3"><span className="opacity-60">{icon}</span><span className="text-sm">{label}</span></div>
       {right}
     </div>
@@ -122,7 +122,7 @@ function Row({ icon, label, right }: { icon: React.ReactNode; label: string; rig
 }
 function LinkRow({ to, icon, label }: { to: any; icon: React.ReactNode; label: string }) {
   return (
-    <Link to={to} className="flex items-center gap-3 px-3 py-3 bg-white rounded-xl ring-1 ring-foreground/5">
+    <Link to={to} className="flex items-center gap-3 px-3 py-3 bg-card rounded-xl ring-1 ring-foreground/5">
       <span className="opacity-60">{icon}</span><span className="text-sm">{label}</span>
     </Link>
   );
@@ -131,7 +131,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   return (
     <button onClick={() => onChange(!on)}
       className={`w-10 h-6 rounded-full p-0.5 transition ${on ? "bg-sunset-600" : "bg-foreground/15"}`}>
-      <div className={`size-5 rounded-full bg-white transition ${on ? "translate-x-4" : ""}`} />
+      <div className={`size-5 rounded-full bg-card transition ${on ? "translate-x-4" : ""}`} />
     </button>
   );
 }

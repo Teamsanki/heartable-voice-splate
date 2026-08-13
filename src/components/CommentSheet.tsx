@@ -52,7 +52,7 @@ export function CommentSheet({
             </p>
           )}
           {items.map((c) => (
-            <div key={c.id} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5">
+            <div key={c.id} className="bg-card rounded-2xl p-3 ring-1 ring-foreground/5">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <p className="text-[11px] font-semibold">{c.name}</p>
                 <div className="flex items-center gap-1.5">
@@ -105,7 +105,7 @@ export function CommentSheet({
             onChange={(e) => setText(e.target.value)}
             placeholder="Kuch bol…"
             maxLength={300}
-            className="flex-1 px-4 py-2.5 rounded-full bg-white ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600"
+            className="flex-1 px-4 py-2.5 rounded-full bg-card ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600"
           />
           <button
             onClick={send}

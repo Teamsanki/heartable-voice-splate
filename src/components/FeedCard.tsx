@@ -179,7 +179,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
                 <button
                   key={i}
                   onClick={() => user && votePostPoll(item.id, user.uid, i)}
-                  className={`relative w-full text-left text-xs px-3 py-2 rounded-xl overflow-hidden ring-1 transition-all ${mine ? "ring-sunset-600 ring-2" : "ring-black/10 hover:ring-black/20"}`}
+                  className={`relative w-full text-left text-xs px-3 py-2 rounded-xl overflow-hidden ring-1 transition-all ${mine ? "ring-sunset-600 ring-2" : "ring-foreground/15 hover:ring-foreground/25"}`}
                 >
                   {voted && (
                     <span

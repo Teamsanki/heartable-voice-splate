@@ -99,7 +99,7 @@ function DMList() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search friends"
-          className="w-full pl-9 pr-4 py-2.5 rounded-full bg-white ring-1 ring-foreground/10 text-sm outline-none"
+          className="w-full pl-9 pr-4 py-2.5 rounded-full bg-card ring-1 ring-foreground/10 text-sm outline-none"
         />
       </div>
 
@@ -139,7 +139,7 @@ function FriendRow({ p }: { p: Person }) {
     <Link
       to="/dm/$uid"
       params={{ uid: p.uid }}
-      className="flex items-center gap-3 bg-white rounded-2xl p-3 ring-1 ring-foreground/5 active:scale-[0.99] transition"
+      className="flex items-center gap-3 bg-card rounded-2xl p-3 ring-1 ring-foreground/5 active:scale-[0.99] transition"
     >
       <div className="relative">
         <div className="size-12 rounded-full bg-sunset-200 grid place-items-center font-semibold overflow-hidden">
@@ -173,23 +173,23 @@ function AddChatDrawer({ users, onClose }: { users: Person[]; onClose: () => voi
   const list = ql ? users.filter((u) => u.name.toLowerCase().includes(ql) || (u.email || "").toLowerCase().includes(ql)) : users;
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3" onClick={onClose}>
-      <div className="w-full sm:max-w-[420px] bg-white rounded-3xl overflow-hidden max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 border-b border-black/5 flex items-center justify-between">
+      <div className="w-full sm:max-w-[420px] bg-card rounded-3xl overflow-hidden max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 border-b border-foreground/10 flex items-center justify-between">
           <h2 className="font-serif italic text-2xl">New chat</h2>
           <button onClick={onClose} className="text-sm opacity-60">Close</button>
         </div>
-        <div className="p-3 border-b border-black/5">
+        <div className="p-3 border-b border-foreground/10">
           <div className="relative">
             <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
             <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or email"
-              className="w-full pl-9 pr-4 py-2.5 rounded-full bg-black/5 text-sm outline-none" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-full bg-foreground/5 text-sm outline-none" />
           </div>
         </div>
         <div className="overflow-y-auto p-2 space-y-1">
           {list.length === 0 && <p className="text-center text-xs opacity-50 py-8">No matches. You can only chat with mutual followers.</p>}
           {list.map((u) => (
             <Link key={u.uid} to="/dm/$uid" params={{ uid: u.uid }} onClick={onClose}
-              className="flex items-center gap-3 p-2 rounded-xl hover:bg-black/5">
+              className="flex items-center gap-3 p-2 rounded-xl hover:bg-foreground/5">
               <div className="size-9 rounded-full bg-sunset-200 grid place-items-center text-xs font-semibold overflow-hidden">
                 {u.photo ? <img src={u.photo} className="w-full h-full object-cover" /> : u.name.slice(0, 1).toUpperCase()}
               </div>

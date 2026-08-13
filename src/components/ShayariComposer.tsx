@@ -91,13 +91,13 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3">
-      <div className="w-full sm:max-w-[460px] bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
-        <div className="flex items-center justify-between p-4 border-b border-black/5">
+      <div className="w-full sm:max-w-[460px] bg-card rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+        <div className="flex items-center justify-between p-4 border-b border-foreground/10">
           <div>
             <p className="text-[10px] uppercase tracking-[0.25em] opacity-50">New Post</p>
             <h2 className="font-serif italic text-2xl flex items-center gap-2">Shayari <Sparkles className="size-4 text-amber-500" /></h2>
           </div>
-          <button onClick={onClose} className="size-9 rounded-full bg-black/5 grid place-items-center"><X className="size-4" /></button>
+          <button onClick={onClose} className="size-9 rounded-full bg-foreground/5 grid place-items-center"><X className="size-4" /></button>
         </div>
 
         <div className="p-4 overflow-y-auto flex-1 space-y-4">
@@ -120,7 +120,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
             maxLength={600}
             rows={4}
             placeholder="Write your shayari here…"
-            className="w-full px-4 py-3 rounded-xl bg-black/5 text-sm outline-none resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-foreground/5 text-sm outline-none resize-none"
           />
 
           <div>
@@ -128,7 +128,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               {RATIOS.map((r) => (
                 <button key={r.id} onClick={() => setRatio(r.id)}
-                  className={`px-3 py-2 rounded-full whitespace-nowrap text-xs ring-1 transition ${ratio === r.id ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-card ring-black/10"}`}>
+                  className={`px-3 py-2 rounded-full whitespace-nowrap text-xs ring-1 transition ${ratio === r.id ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-card ring-foreground/15"}`}>
                   {r.label}
                 </button>
               ))}
@@ -140,7 +140,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               {SHAYARI_FONTS.map((f) => (
                 <button key={f.id} onClick={() => setFontId(f.id)}
-                  className={`px-3 py-2 rounded-full whitespace-nowrap text-sm ring-1 transition ${fontId === f.id ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-white ring-black/10"}`}
+                  className={`px-3 py-2 rounded-full whitespace-nowrap text-sm ring-1 transition ${fontId === f.id ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-card ring-foreground/15"}`}
                   style={{ fontFamily: f.family }}>
                   {f.label}
                 </button>
@@ -163,7 +163,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={() => setPollOn((v) => !v)}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs ring-1 ${pollOn ? "ring-sunset-600 bg-sunset-100" : "ring-black/10"}`}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs ring-1 ${pollOn ? "ring-sunset-600 bg-sunset-100" : "ring-foreground/15"}`}
             >
               <span className="flex items-center gap-2"><BarChart3 className="size-4" /> Attach a poll</span>
               <span className="opacity-60">{pollOn ? "On" : "Off"}</span>
@@ -175,7 +175,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
                   onChange={(e) => setPollQ(e.target.value)}
                   maxLength={140}
                   placeholder="Poll question…"
-                  className="w-full px-3 py-2 rounded-xl bg-black/5 text-sm outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-foreground/5 text-sm outline-none"
                 />
                 {pollOpts.map((opt, i) => (
                   <div key={i} className="flex gap-2">
@@ -184,10 +184,10 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
                       onChange={(e) => setPollOpts((arr) => arr.map((v, j) => j === i ? e.target.value : v))}
                       maxLength={60}
                       placeholder={`Option ${i + 1}`}
-                      className="flex-1 px-3 py-2 rounded-xl bg-black/5 text-sm outline-none"
+                      className="flex-1 px-3 py-2 rounded-xl bg-foreground/5 text-sm outline-none"
                     />
                     {pollOpts.length > 2 && (
-                      <button onClick={() => setPollOpts((arr) => arr.filter((_, j) => j !== i))} className="size-9 rounded-xl bg-black/5 grid place-items-center"><Trash2 className="size-4" /></button>
+                      <button onClick={() => setPollOpts((arr) => arr.filter((_, j) => j !== i))} className="size-9 rounded-xl bg-foreground/5 grid place-items-center"><Trash2 className="size-4" /></button>
                     )}
                   </div>
                 ))}
@@ -207,7 +207,7 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="p-3 border-t border-black/5">
+        <div className="p-3 border-t border-foreground/10">
           <button onClick={post} disabled={!text.trim() || busy}
             className="w-full py-3 rounded-full bg-sunset-900 text-sunset-50 text-sm font-semibold disabled:opacity-50">
             {busy ? "Posting…" : "Share Shayari"}
@@ -220,10 +220,10 @@ export function ShayariComposer({ onClose }: { onClose: () => void }) {
 
 function SettingRow({ label, on, onChange }: { label: string; on: boolean; onChange: () => void }) {
   return (
-    <button type="button" onClick={onChange} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl ring-1 ring-black/10 text-xs bg-white">
+    <button type="button" onClick={onChange} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl ring-1 ring-foreground/15 text-xs bg-card">
       <span>{label}</span>
       <span className={`w-9 h-5 rounded-full relative transition ${on ? "bg-sunset-600" : "bg-black/20"}`}>
-        <span className={`absolute top-0.5 size-4 rounded-full bg-white transition ${on ? "left-[18px]" : "left-0.5"}`} />
+        <span className={`absolute top-0.5 size-4 rounded-full bg-card transition ${on ? "left-[18px]" : "left-0.5"}`} />
       </span>
     </button>
   );

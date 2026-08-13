@@ -285,7 +285,7 @@ function AdminPage() {
             { l: "Guests", v: guests },
             { l: "Voices", v: voices },
           ].map((s) => (
-            <div key={s.l} className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5 text-center">
+            <div key={s.l} className="bg-card rounded-2xl p-4 ring-1 ring-foreground/5 text-center">
               <p className="font-serif italic text-3xl">{s.v}</p>
               <p className="text-[10px] uppercase tracking-widest opacity-60 mt-1">{s.l}</p>
             </div>
@@ -294,7 +294,7 @@ function AdminPage() {
       )}
 
       {tab === "broadcast" && (
-        <div className="space-y-3 bg-white rounded-2xl p-4 ring-1 ring-foreground/5">
+        <div className="space-y-3 bg-card rounded-2xl p-4 ring-1 ring-foreground/5">
           <input
             value={bTitle}
             onChange={(e) => setBTitle(e.target.value)}
@@ -353,7 +353,7 @@ function AdminPage() {
             📣 Send in-app + browser push
           </button>
           <button onClick={emailBlast}
-            className="w-full py-2.5 rounded-full bg-white ring-1 ring-foreground/10 text-xs font-medium">
+            className="w-full py-2.5 rounded-full bg-card ring-1 ring-foreground/10 text-xs font-medium">
             ✉️ Also email to all users (opens mail client, BCC)
           </button>
         </div>
@@ -362,7 +362,7 @@ function AdminPage() {
       {tab === "tickets" && (
         <div className="space-y-2">
           {activeTicket ? (
-            <div className="bg-white rounded-2xl ring-1 ring-foreground/5 flex flex-col h-[60vh]">
+            <div className="bg-card rounded-2xl ring-1 ring-foreground/5 flex flex-col h-[60vh]">
               <div className="p-3 border-b border-foreground/5 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold">{activeTicket.name}</p>
@@ -412,7 +412,7 @@ function AdminPage() {
               <button
                 key={t.id}
                 onClick={() => setActiveTicket(t)}
-                className="w-full bg-white rounded-2xl p-3 ring-1 ring-foreground/5 flex items-center justify-between text-left"
+                className="w-full bg-card rounded-2xl p-3 ring-1 ring-foreground/5 flex items-center justify-between text-left"
               >
                 <div>
                   <p className="text-xs font-semibold">{t.name}</p>
@@ -436,7 +436,7 @@ function AdminPage() {
             <p className="text-center text-sm opacity-50 py-10">Koi report nahi.</p>
           )}
           {reports.map((r) => (
-            <div key={r.id} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5 space-y-2">
+            <div key={r.id} className="bg-card rounded-2xl p-3 ring-1 ring-foreground/5 space-y-2">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold">{r.kind.toUpperCase()} · {r.reporterName}</p>
@@ -477,7 +477,7 @@ function AdminPage() {
       )}
 
       {tab === "site" && (
-        <div className="space-y-3 bg-white rounded-2xl p-4 ring-1 ring-foreground/5">
+        <div className="space-y-3 bg-card rounded-2xl p-4 ring-1 ring-foreground/5">
           <div>
             <label className="text-[10px] uppercase tracking-widest opacity-60">Site name</label>
             <input value={site.name} onChange={(e) => setSite({ ...site, name: e.target.value })}
@@ -504,7 +504,7 @@ function AdminPage() {
             </div>
             <button onClick={() => setBeta(!beta)}
               className={`w-12 h-7 rounded-full p-0.5 transition ${beta ? "bg-fuchsia-600" : "bg-foreground/15"}`}>
-              <div className={`size-6 rounded-full bg-white transition ${beta ? "translate-x-5" : ""}`} />
+              <div className={`size-6 rounded-full bg-card transition ${beta ? "translate-x-5" : ""}`} />
             </button>
           </div>
         </div>
@@ -512,7 +512,7 @@ function AdminPage() {
 
       {tab === "admins" && founder && (
         <div className="space-y-3">
-          <div className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
+          <div className="bg-card rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
             <p className="text-sm font-semibold">Add an admin</p>
             <input value={newAdminEmail} onChange={(e) => setNewAdminEmail(e.target.value)} placeholder="user@email.com"
               className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
@@ -526,7 +526,7 @@ function AdminPage() {
 
           {admins.length === 0 && (<p className="text-center text-xs opacity-50 py-6">No admins yet.</p>)}
           {admins.map((a) => (
-            <div key={a.uid} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5 space-y-2">
+            <div key={a.uid} className="bg-card rounded-2xl p-3 ring-1 ring-foreground/5 space-y-2">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold">{a.name}</p>
@@ -551,7 +551,7 @@ function AdminPage() {
 
       {tab === "rewards" && (
         <div className="space-y-3">
-          <div className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5">
+          <div className="bg-card rounded-2xl p-4 ring-1 ring-foreground/5">
             <p className="text-sm font-semibold mb-1">This week's milestone</p>
             {milestone ? (
               <>
@@ -568,7 +568,7 @@ function AdminPage() {
             <p className="text-[10px] opacity-50 mt-2">Auto-refreshes every Sunday at midnight.</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
+          <div className="bg-card rounded-2xl p-4 ring-1 ring-foreground/5 space-y-2">
             <p className="text-sm font-semibold">Create a giveaway</p>
             <input value={gTitle} onChange={(e) => setGTitle(e.target.value)} placeholder="Title (e.g. ₹100 Amazon voucher)"
               className="w-full px-4 py-2.5 rounded-xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none" />
@@ -585,7 +585,7 @@ function AdminPage() {
           </div>
 
           {giveaways.map((g) => (
-            <div key={g.id} className="bg-white rounded-2xl p-3 ring-1 ring-foreground/5">
+            <div key={g.id} className="bg-card rounded-2xl p-3 ring-1 ring-foreground/5">
               <p className="text-sm font-semibold">{g.title} <span className="text-[10px] opacity-50">· {Object.keys(g.entries || {}).length} entries</span></p>
               <p className="text-[11px] opacity-70">{g.description}</p>
               {g.winner ? (<p className="text-[11px] text-emerald-700 mt-1">🏆 Winner: {g.winner.name}</p>) : (
@@ -613,7 +613,7 @@ function AdminPage() {
           {!founder && (
             <p className="text-xs opacity-60">Direct line with the Founder. Use it to escalate issues, share moderation notes, or ask for help.</p>
           )}
-          <div className="bg-white rounded-2xl ring-1 ring-foreground/5 flex flex-col h-[55vh]">
+          <div className="bg-card rounded-2xl ring-1 ring-foreground/5 flex flex-col h-[55vh]">
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {chatMsgs.length === 0 && <p className="text-center text-xs opacity-50 py-10">{founder && !chatPeerUid ? "Pick an admin above to start chatting." : "Say hello to start the conversation."}</p>}
               {chatMsgs.map((m) => {

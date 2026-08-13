@@ -87,7 +87,7 @@ function SupportPage() {
             className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
               m.from === "user"
                 ? "ml-auto bg-sunset-600 text-white rounded-br-md"
-                : "mr-auto bg-white ring-1 ring-foreground/5 rounded-bl-md"
+                : "mr-auto bg-card ring-1 ring-foreground/5 rounded-bl-md"
             }`}
           >
             {m.text}
@@ -106,7 +106,7 @@ function SupportPage() {
           onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder="Apna message…"
           maxLength={1000}
-          className="flex-1 px-4 py-2.5 rounded-full bg-white ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600"
+          className="flex-1 px-4 py-2.5 rounded-full bg-card ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600"
         />
         <button
           onClick={send}

@@ -81,7 +81,7 @@ function SearchPage() {
     <MobileShell>
       <div className="px-4 pt-4 pb-32">
         <div className="flex items-center gap-2 mb-3">
-          <Link to="/home" className="size-9 rounded-full bg-black/5 grid place-items-center"><ChevronLeft className="size-4" /></Link>
+          <Link to="/home" className="size-9 rounded-full bg-foreground/5 grid place-items-center"><ChevronLeft className="size-4" /></Link>
           <div className="flex-1 relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 opacity-50" />
             <input
@@ -89,7 +89,7 @@ function SearchPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search users, #tags, posts…"
-              className="w-full h-10 pl-9 pr-3 rounded-full bg-black/5 outline-none text-sm"
+              className="w-full h-10 pl-9 pr-3 rounded-full bg-foreground/5 outline-none text-sm"
             />
           </div>
         </div>
@@ -120,7 +120,7 @@ function SearchPage() {
               <div className="space-y-1">
                 {users.length === 0 && !busy && <p className="text-xs opacity-50">No users.</p>}
                 {users.map((u) => (
-                  <Link key={u.uid} to="/dm/$uid" params={{ uid: u.uid }} className="flex items-center gap-3 p-2 rounded-xl hover:bg-black/5">
+                  <Link key={u.uid} to="/dm/$uid" params={{ uid: u.uid }} className="flex items-center gap-3 p-2 rounded-xl hover:bg-foreground/5">
                     <div className="size-9 rounded-full bg-sunset-200 grid place-items-center overflow-hidden">
                       {u.photo ? <img src={u.photo} className="w-full h-full object-cover" alt="" /> : <span className="text-xs font-semibold">{u.name.slice(0, 1).toUpperCase()}</span>}
                     </div>
@@ -135,7 +135,7 @@ function SearchPage() {
                 <div className="space-y-1">
                   {posts.length === 0 && !busy && <p className="text-xs opacity-50">No posts.</p>}
                   {posts.map((p) => (
-                    <Link key={p.id} to="/p/$id" params={{ id: p.id }} className="block p-2 rounded-xl hover:bg-black/5">
+                    <Link key={p.id} to="/p/$id" params={{ id: p.id }} className="block p-2 rounded-xl hover:bg-foreground/5">
                       <p className="text-xs opacity-60">{p.name} {p.type === "shayari" ? "· shayari" : "· voice"}</p>
                       <p className="text-sm line-clamp-2">{p.caption || p.text || "(no text)"}</p>
                     </Link>

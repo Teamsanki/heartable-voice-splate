@@ -64,7 +64,7 @@ function RecordPage() {
                   className={`text-xs font-medium px-3 py-1.5 rounded-full ring-1 ${
                     category === c
                       ? "bg-sunset-900 text-sunset-50 ring-sunset-900"
-                      : "bg-white text-sunset-900 ring-foreground/10"
+                      : "bg-card text-sunset-900 ring-foreground/10"
                   }`}
                 >
                   {c === "shayari" ? "📜 Shayari" : c === "song" ? "🎵 Song" : c === "story" ? "📖 Story" : "✨ Other"}
@@ -77,7 +77,7 @@ function RecordPage() {
               placeholder="Caption / shayari text…"
               maxLength={200}
               rows={2}
-              className="w-full px-4 py-3 rounded-2xl bg-white ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600 resize-none"
+              className="w-full px-4 py-3 rounded-2xl bg-card ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600 resize-none"
             />
           </>
         )}

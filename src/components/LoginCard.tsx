@@ -59,7 +59,7 @@ export function LoginCard({ onDone }: { onDone?: () => void }) {
           <button
             onClick={() => run(() => auth.signInGoogle())}
             disabled={busy}
-            className="w-full py-3 rounded-full bg-white ring-1 ring-foreground/10 text-sm font-semibold hover:bg-sunset-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-full bg-card ring-1 ring-foreground/10 text-sm font-semibold hover:bg-sunset-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <span className="size-4 inline-block rounded-full bg-gradient-to-br from-red-400 via-yellow-400 to-blue-500" />
             Continue with Google
