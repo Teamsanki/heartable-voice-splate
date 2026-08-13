@@ -1,0 +1,42 @@
+import { push, ref, set } from "firebase/database";
+import { db, VOICE_ROOT } from "./firebase";
+
+const DAY = 24 * 60 * 60 * 1000;
+
+export type PostPreview = {
+  name: string;
+  text?: string;
+  caption?: string;
+  bgCss?: string;
+  fgColor?: string;
+  fontId?: string;
+  type?: string;
+  url?: string;
+};
+
+/** Instagram-style "Add post to your story". */
+export async function sharePostToStory(opts: {
+  uid: string;
+  name: string;
+  photo?: string | null;
+  postId: string;
+  preview: PostPreview;
+}) {
+  const node = push(ref(db, `${VOICE_ROOT}/${opts.uid}/stories`));
+  await set(node, {
+    uid: opts.uid,
+    name: opts.name,
+    photo: opts.photo || null,
+    kind: "post",
+    postId: opts.postId,
+    postPreview: opts.preview,
+    url: opts.preview.url || "",
+    filter: "none",
+    durationSec: 6,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + DAY,
+    replays: {},
+    reactions: {},
+  });
+  return node.key!;
+}
