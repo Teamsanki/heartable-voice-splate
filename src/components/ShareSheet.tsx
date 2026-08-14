@@ -152,9 +152,17 @@ export function ShareSheet({
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">
           {list.length === 0 && (
-            <p className="text-center text-xs opacity-50 py-8">
-              No friends yet — you can share only with mutual followers.
-            </p>
+            <div className="text-center py-8 space-y-2">
+              <p className="text-xs opacity-50">
+                No friends yet — you can send posts only to mutual followers.
+              </p>
+              <button
+                onClick={() => { onClose(); navigate({ to: "/dm" }); }}
+                className="text-xs font-semibold text-sunset-600 underline"
+              >
+                Open Chats to find people
+              </button>
+            </div>
           )}
           {list.map((f) => (
             <div key={f.uid} className="flex items-center gap-3 p-2 rounded-xl">
