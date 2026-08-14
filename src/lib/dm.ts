@@ -1,5 +1,6 @@
 import { get, onValue, push, ref, remove, serverTimestamp, set, update } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
+import { cleanPreview } from "./share";
 
 export function threadId(a: string, b: string) {
   return [a, b].sort().join("_");
@@ -49,7 +50,7 @@ export async function sendPostDM(
   const node = push(ref(db, `dm/${threadId(fromUid, toUid)}/messages`));
   await set(node, {
     uid: fromUid, name: fromName, to: toUid, kind: "post",
-    postId, postPreview: preview || null,
+    postId, postPreview: preview ? cleanPreview(preview) : null,
     text: (note || "").slice(0, 200),
     read: false, createdAt: Date.now(),
   });
