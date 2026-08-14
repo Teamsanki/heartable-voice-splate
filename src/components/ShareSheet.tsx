@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { get, ref } from "firebase/database";
-import { X, Search, Link2, PlusCircle, Send, Check } from "lucide-react";
+import { X, Search, Link2, PlusCircle, Send, Check, MessageCircle } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { listenFriends, recordShare } from "@/lib/social";
@@ -19,12 +20,20 @@ export function ShareSheet({
   onClose: () => void;
 }) {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [q, setQ] = useState("");
   const [note, setNote] = useState("");
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [storyDone, setStoryDone] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+
+  useEffect(() => {
+    if (!status) return;
+    const t = setTimeout(() => setStatus(null), 3500);
+    return () => clearTimeout(t);
+  }, [status]);
 
   useEffect(() => {
     if (!user) return;
@@ -52,8 +61,12 @@ export function ShareSheet({
     setBusy(true);
     try {
       await sendPostDM(user.uid, profile.name, f.uid, postId, preview, note);
-      await recordShare(postId, user.uid);
+      try { await recordShare(postId, user.uid); } catch { /* count only */ }
       setSent((s) => new Set(s).add(f.uid));
+      setStatus({ kind: "ok", msg: `Sent to ${f.name}` });
+    } catch (e: any) {
+      console.error("share dm failed", e);
+      setStatus({ kind: "err", msg: e?.message || "Could not send. Try again." });
     } finally { setBusy(false); }
   };
 
@@ -62,17 +75,34 @@ export function ShareSheet({
     setBusy(true);
     try {
       await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, preview });
-      await recordShare(postId, user.uid);
+      try { await recordShare(postId, user.uid); } catch { /* count only */ }
       setStoryDone(true);
+      setStatus({ kind: "ok", msg: "Added to your story — visible for 24h" });
+    } catch (e: any) {
+      console.error("share story failed", e);
+      setStatus({ kind: "err", msg: e?.message || "Could not add to story." });
     } finally { setBusy(false); }
   };
 
   const copyLink = async () => {
     try {
-      if (navigator.share) await navigator.share({ title: `${preview.name} on Heartable`, url });
-      else { await navigator.clipboard.writeText(url); alert("Link copied!"); }
-      await recordShare(postId, user?.uid);
-    } catch { /* cancelled */ }
+      if (navigator.share) {
+        await navigator.share({ title: `${preview.name} on Heartable`, url });
+        setStatus({ kind: "ok", msg: "Shared!" });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setStatus({ kind: "ok", msg: "Link copied to clipboard" });
+      }
+      try { await recordShare(postId, user?.uid); } catch { /* count only */ }
+    } catch (e: any) {
+      if (e?.name === "AbortError") return; // user cancelled
+      try {
+        await navigator.clipboard.writeText(url);
+        setStatus({ kind: "ok", msg: "Link copied to clipboard" });
+      } catch {
+        setStatus({ kind: "err", msg: "Could not copy the link." });
+      }
+    }
   };
 
   return (
@@ -100,6 +130,18 @@ export function ShareSheet({
           </button>
         </div>
 
+        {status && (
+          <div
+            className={`mx-4 mb-2 rounded-xl px-3 py-2 text-xs font-medium ${
+              status.kind === "ok"
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                : "bg-red-500/15 text-red-600 dark:text-red-400"
+            }`}
+          >
+            {status.msg}
+          </div>
+        )}
+
         <div className="px-4 pb-2">
           <div className="relative">
             <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
@@ -119,7 +161,19 @@ export function ShareSheet({
               <div className="size-10 rounded-full bg-sunset-200 grid place-items-center text-xs font-semibold overflow-hidden">
                 {f.photo ? <img src={f.photo} alt="" className="w-full h-full object-cover" /> : f.name.slice(0, 1).toUpperCase()}
               </div>
-              <p className="flex-1 text-sm font-medium truncate">{f.name}</p>
+              <button
+                onClick={() => { onClose(); navigate({ to: "/dm/$uid", params: { uid: f.uid } }); }}
+                className="flex-1 text-left text-sm font-medium truncate hover:underline"
+              >
+                {f.name}
+              </button>
+              <button
+                onClick={() => { onClose(); navigate({ to: "/dm/$uid", params: { uid: f.uid } }); }}
+                aria-label={`Open chat with ${f.name}`}
+                className="size-8 rounded-full bg-foreground/5 grid place-items-center"
+              >
+                <MessageCircle className="size-4" />
+              </button>
               <button onClick={() => sendTo(f)} disabled={busy || sent.has(f.uid)}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 ${sent.has(f.uid) ? "bg-foreground/10 opacity-70" : "bg-sunset-600 text-white"}`}>
                 {sent.has(f.uid) ? <><Check className="size-3" /> Sent</> : <><Send className="size-3" /> Send</>}
