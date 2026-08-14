@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/auth-context";
 import { Recorder } from "@/components/Recorder";
 import { VoicePlayer } from "@/components/VoicePlayer";
 import { postSnap } from "@/lib/voice-api";
-import { areFriends } from "@/lib/social";
 import { isMutuallyBlocked } from "@/lib/blocks";
 import { submitReport } from "@/lib/reports";
 import {
@@ -35,7 +34,7 @@ function DMThread() {
   const [muted, setMuted] = useState(false);
   const [clearedAt, setClearedAt] = useState(0);
   const typingTimer = useRef<any>(null);
-  const [gate, setGate] = useState<"loading" | "ok" | "not-friends" | "blocked">("loading");
+  const [gate, setGate] = useState<"loading" | "ok" | "blocked">("loading");
 
   const threadId = user ? [user.uid, peerUid].sort().join("_") : null;
 
@@ -51,9 +50,8 @@ function DMThread() {
     (async () => {
       const blocked = await isMutuallyBlocked(user.uid, peerUid);
       if (blocked) { setGate("blocked"); return; }
-      const friends = await areFriends(user.uid, peerUid);
-      setGate(friends ? "ok" : "not-friends");
-    })();
+      setGate("ok");
+    })().catch(() => setGate("ok"));
   }, [user, peerUid]);
 
   useEffect(() => {
@@ -123,19 +121,8 @@ function DMThread() {
       </div>
     </div>;
   }
-  if (gate === "not-friends") {
-    return <div className="min-h-screen grid place-items-center p-6 text-center">
-      <div className="max-w-sm">
-        <p className="text-4xl">🔒</p>
-        <p className="font-serif italic text-2xl mt-2">Friends only</p>
-        <p className="text-sm opacity-60 mt-2">You and this user must follow each other to chat.</p>
-        <button onClick={() => navigate({ to: "/dm" })} className="mt-4 underline text-sm">Back to messages</button>
-      </div>
-    </div>;
-  }
-
   return (
-    <div className="min-h-screen bg-sunset-50 text-sunset-900">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="w-full sm:max-w-[480px] mx-auto min-h-[100dvh] flex flex-col p-6 gap-4 pb-32">
         <div className="flex items-center justify-between">
           <button onClick={() => navigate({ to: "/dm" })} className="text-sm opacity-60">

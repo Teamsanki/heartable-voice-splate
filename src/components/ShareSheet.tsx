@@ -4,7 +4,7 @@ import { X, Search, Link2, PlusCircle, Send, Check, MessageCircle } from "lucide
 import { useNavigate } from "@tanstack/react-router";
 import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { listenFriends, recordShare } from "@/lib/social";
+import { recordShare } from "@/lib/social";
 import { sendPostDM } from "@/lib/dm";
 import { sharePostToStory, type PostPreview } from "@/lib/share";
 
@@ -22,6 +22,7 @@ export function ShareSheet({
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [loadingPeople, setLoadingPeople] = useState(true);
   const [q, setQ] = useState("");
   const [note, setNote] = useState("");
   const [sent, setSent] = useState<Set<string>>(new Set());
@@ -36,17 +37,25 @@ export function ShareSheet({
   }, [status]);
 
   useEffect(() => {
-    if (!user) return;
-    return listenFriends(user.uid, async (ids) => {
-      const list = await Promise.all(
-        ids.map(async (uid) => {
-          const s = await get(ref(db, `${VOICE_ROOT}/${uid}/profile`));
-          const p = s.val() || {};
-          return { uid, name: p.name || "Friend", photo: p.photo || null };
-        }),
-      );
-      setFriends(list);
-    });
+    if (!user) { setLoadingPeople(false); return; }
+    let cancelled = false;
+    setLoadingPeople(true);
+    get(ref(db, VOICE_ROOT))
+      .then((snap) => {
+        if (cancelled) return;
+        const people: Friend[] = [];
+        snap.forEach((child) => {
+          if (child.key === user.uid) return;
+          const p = child.child("profile").val() || {};
+          if (p.name) people.push({ uid: child.key || "", name: p.name, photo: p.photo || null });
+        });
+        setFriends(people.sort((a, b) => a.name.localeCompare(b.name)));
+      })
+      .catch((error) => {
+        if (!cancelled) setStatus({ kind: "err", msg: error?.message || "Could not load people." });
+      })
+      .finally(() => { if (!cancelled) setLoadingPeople(false); });
+    return () => { cancelled = true; };
   }, [user]);
 
   const url = typeof location !== "undefined" ? `${location.origin}/p/${postId}` : "";
@@ -71,7 +80,11 @@ export function ShareSheet({
   };
 
   const toStory = async () => {
-    if (!user || !profile || storyDone) return;
+    if (!user || !profile) {
+      setStatus({ kind: "err", msg: "Sign in to add this post to your story." });
+      return;
+    }
+    if (storyDone) return;
     setBusy(true);
     try {
       await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, preview });
@@ -86,22 +99,24 @@ export function ShareSheet({
 
   const copyLink = async () => {
     try {
-      if (navigator.share) {
-        await navigator.share({ title: `${preview.name} on Heartable`, url });
-        setStatus({ kind: "ok", msg: "Shared!" });
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
       } else {
-        await navigator.clipboard.writeText(url);
-        setStatus({ kind: "ok", msg: "Link copied to clipboard" });
+        const input = document.createElement("textarea");
+        input.value = url;
+        input.setAttribute("readonly", "");
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        const copied = document.execCommand("copy");
+        input.remove();
+        if (!copied) throw new Error("Copy unavailable");
       }
+      setStatus({ kind: "ok", msg: "Link copied to clipboard" });
       try { await recordShare(postId, user?.uid); } catch { /* count only */ }
-    } catch (e: any) {
-      if (e?.name === "AbortError") return; // user cancelled
-      try {
-        await navigator.clipboard.writeText(url);
-        setStatus({ kind: "ok", msg: "Link copied to clipboard" });
-      } catch {
-        setStatus({ kind: "err", msg: "Could not copy the link." });
-      }
+    } catch {
+      setStatus({ kind: "err", msg: "Could not copy the link. Please try again." });
     }
   };
 
@@ -151,10 +166,11 @@ export function ShareSheet({
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">
-          {list.length === 0 && (
+          {loadingPeople && <p className="text-center text-xs text-muted-foreground py-8">Loading people…</p>}
+          {!loadingPeople && list.length === 0 && (
             <div className="text-center py-8 space-y-2">
               <p className="text-xs opacity-50">
-                No friends yet — you can send posts only to mutual followers.
+                No people found yet.
               </p>
               <button
                 onClick={() => { onClose(); navigate({ to: "/dm" }); }}
