@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { FILTERS, type VoiceFilter } from "@/lib/audio-filters";
+import { useEffect, useRef, useState } from "react";
+import { Pause, Play } from "lucide-react";
+import { FILTERS, applyFilter, encodeFilter, type VoiceFilter } from "@/lib/audio-filters";
 import { useRecorder } from "@/lib/recorder";
 
 export function Recorder({
@@ -7,20 +8,58 @@ export function Recorder({
   submitLabel = "Share",
   busy,
 }: {
-  onSubmit: (blob: Blob, filter: VoiceFilter, durationSec: number) => Promise<void> | void;
+  onSubmit: (blob: Blob, filter: string, durationSec: number) => Promise<void> | void;
   submitLabel?: string;
   busy?: boolean;
 }) {
   const { state, elapsed, blob, levels, start, stop, reset } = useRecorder(60);
   const [filter, setFilter] = useState<VoiceFilter>("Romantic Reverb");
+  const [pitch, setPitch] = useState(1.04);
+  const [amount, setAmount] = useState(0.7);
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const chainRef = useRef<{ cleanup: () => void } | null>(null);
+  const urlRef = useRef<string | null>(null);
+
+  const encoded = encodeFilter(filter, pitch, amount);
+
+  const stopPreview = () => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    chainRef.current?.cleanup();
+    chainRef.current = null;
+    if (urlRef.current) { URL.revokeObjectURL(urlRef.current); urlRef.current = null; }
+    setPlaying(false);
+  };
+
+  useEffect(() => () => stopPreview(), []);
+  // Restart preview when the filter settings change mid-playback
+  useEffect(() => {
+    if (playing) { stopPreview(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [encoded]);
+
+  const playPreview = async () => {
+    if (!blob) return;
+    if (playing) { stopPreview(); return; }
+    const url = URL.createObjectURL(blob);
+    urlRef.current = url;
+    const el = new Audio(url);
+    el.crossOrigin = "anonymous";
+    audioRef.current = el;
+    chainRef.current = applyFilter(el, encoded);
+    el.onended = () => stopPreview();
+    try { await el.play(); setPlaying(true); } catch { stopPreview(); }
+  };
 
   const handlePointer = async (down: boolean) => {
     if (down) {
       try {
+        stopPreview();
         await start();
       } catch (e) {
         console.error("mic permission", e);
-        alert("Microphone permission chahiye recording ke liye.");
+        alert("Microphone permission is required to record.");
       }
     } else {
       stop();
@@ -80,7 +119,7 @@ export function Recorder({
         {FILTERS.map((f) => (
           <button
             key={f}
-            onClick={() => setFilter(f)}
+            onClick={() => { setFilter(f); stopPreview(); }}
             className={`text-xs font-medium px-3 py-1.5 rounded-full ring-1 transition ${
               filter === f
                 ? "bg-sunset-900 text-sunset-50 ring-sunset-900"
@@ -92,10 +131,40 @@ export function Recorder({
         ))}
       </div>
 
+      {state === "stopped" && blob && filter === "Autotune" && (
+        <div className="w-full text-left space-y-3 rounded-2xl bg-sunset-100/70 p-4">
+          <p className="text-xs font-semibold text-sunset-900">Autotune studio</p>
+          <label className="block text-[11px] text-sunset-900/70">
+            Pitch <span className="font-semibold">{pitch.toFixed(2)}x</span>
+            <input
+              type="range" min={0.85} max={1.25} step={0.01} value={pitch}
+              onChange={(e) => setPitch(Number(e.target.value))}
+              className="w-full accent-sunset-600"
+            />
+          </label>
+          <label className="block text-[11px] text-sunset-900/70">
+            Effect level <span className="font-semibold">{Math.round(amount * 100)}%</span>
+            <input
+              type="range" min={0} max={0.95} step={0.05} value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              className="w-full accent-sunset-600"
+            />
+          </label>
+        </div>
+      )}
+
       {state === "stopped" && blob && (
+        <>
+        <button
+          onClick={playPreview}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-sunset-900 text-sunset-50 text-sm font-medium"
+        >
+          {playing ? <Pause className="size-4" /> : <Play className="size-4" />}
+          {playing ? "Stop preview" : "Preview with effect"}
+        </button>
         <div className="flex gap-2 w-full">
           <button
-            onClick={reset}
+            onClick={() => { stopPreview(); reset(); }}
             disabled={busy}
             className="flex-1 px-4 py-3 rounded-full bg-sunset-100 text-sunset-900 text-sm font-medium hover:bg-sunset-200 transition"
           >
@@ -103,7 +172,8 @@ export function Recorder({
           </button>
           <button
             onClick={async () => {
-              await onSubmit(blob, filter, elapsed);
+              stopPreview();
+              await onSubmit(blob, encoded, elapsed);
               reset();
             }}
             disabled={busy}
@@ -112,6 +182,7 @@ export function Recorder({
             {busy ? "Sharing…" : submitLabel}
           </button>
         </div>
+        </>
       )}
     </div>
   );
