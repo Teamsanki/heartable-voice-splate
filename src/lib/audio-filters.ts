@@ -35,6 +35,26 @@ export const FILTERS: VoiceFilter[] = [
   "Fast-Fwd",
 ];
 
+/**
+ * Filters can carry parameters encoded in the string, e.g.
+ * "Autotune:1.04:0.7"  ->  base "Autotune", pitch 1.04, amount 0.7
+ */
+export type ParsedFilter = { base: VoiceFilter; pitch: number; amount: number };
+
+export function parseFilter(filter: string): ParsedFilter {
+  const [base, pitch, amount] = String(filter || "None").split(":");
+  return {
+    base: (base as VoiceFilter) || "None",
+    pitch: Number(pitch) || 1.04,
+    amount: Number.isFinite(Number(amount)) ? Number(amount) : 0.7,
+  };
+}
+
+export function encodeFilter(base: VoiceFilter, pitch: number, amount: number) {
+  if (base !== "Autotune") return base;
+  return `Autotune:${pitch.toFixed(2)}:${amount.toFixed(2)}`;
+}
+
 // Build a simple impulse response for reverb
 function makeImpulse(ctx: AudioContext, dur: number, decay: number) {
   const rate = ctx.sampleRate;
