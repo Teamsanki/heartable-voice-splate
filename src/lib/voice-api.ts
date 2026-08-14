@@ -52,7 +52,7 @@ export async function postFeed(opts: {
   name: string;
   photo?: string | null;
   blob: Blob;
-  filter: VoiceFilter;
+  filter: VoiceFilter | string;
   caption?: string;
   durationSec: number;
   category?: "song" | "shayari" | "story" | "other";
@@ -86,7 +86,7 @@ export async function postStory(opts: {
   name: string;
   photo?: string | null;
   blob: Blob;
-  filter: VoiceFilter;
+  filter: VoiceFilter | string;
   durationSec: number;
 }) {
   const { url } = await uploadBlob(opts.uid, opts.blob, "stories");
@@ -112,7 +112,7 @@ export async function postSnap(opts: {
   name: string;
   toUid: string;
   blob: Blob;
-  filter: VoiceFilter;
+  filter: VoiceFilter | string;
   durationSec: number;
 }) {
   const { url } = await uploadBlob(opts.uid, opts.blob, "snaps");
@@ -138,7 +138,7 @@ export async function postMehfil(opts: {
   name: string;
   photo?: string | null;
   blob: Blob;
-  filter: VoiceFilter;
+  filter: VoiceFilter | string;
   durationSec: number;
 }) {
   const { url } = await uploadBlob(opts.uid, opts.blob, `mehfil-${opts.circleId}`);

@@ -35,6 +35,26 @@ export const FILTERS: VoiceFilter[] = [
   "Fast-Fwd",
 ];
 
+/**
+ * Filters can carry parameters encoded in the string, e.g.
+ * "Autotune:1.04:0.7"  ->  base "Autotune", pitch 1.04, amount 0.7
+ */
+export type ParsedFilter = { base: VoiceFilter; pitch: number; amount: number };
+
+export function parseFilter(filter: string): ParsedFilter {
+  const [base, pitch, amount] = String(filter || "None").split(":");
+  return {
+    base: (base as VoiceFilter) || "None",
+    pitch: Number(pitch) || 1.04,
+    amount: Number.isFinite(Number(amount)) ? Number(amount) : 0.7,
+  };
+}
+
+export function encodeFilter(base: VoiceFilter, pitch: number, amount: number) {
+  if (base !== "Autotune") return base;
+  return `Autotune:${pitch.toFixed(2)}:${amount.toFixed(2)}`;
+}
+
 // Build a simple impulse response for reverb
 function makeImpulse(ctx: AudioContext, dur: number, decay: number) {
   const rate = ctx.sampleRate;
@@ -55,8 +75,9 @@ function makeImpulse(ctx: AudioContext, dur: number, decay: number) {
  */
 export function applyFilter(
   audio: HTMLAudioElement,
-  filter: VoiceFilter,
+  filterInput: VoiceFilter | string,
 ): { ctx: AudioContext; cleanup: () => void } {
+  const { base: filter, pitch: atPitch, amount: atAmount } = parseFilter(filterInput as string);
   const AC = window.AudioContext || (window as any).webkitAudioContext;
   const ctx: AudioContext = new AC();
   const src = ctx.createMediaElementSource(audio);
@@ -160,14 +181,15 @@ export function applyFilter(
     }
     case "Autotune": {
       // Approximate: high-Q comb + slight upward pitch via playbackRate
-      audio.playbackRate = 1.04;
+      audio.playbackRate = atPitch;
       const delay = ctx.createDelay(); delay.delayTime.value = 0.005;
-      const fb = ctx.createGain(); fb.gain.value = 0.7;
+      const fb = ctx.createGain(); fb.gain.value = Math.min(0.95, Math.max(0, atAmount));
       delay.connect(fb).connect(delay);
       const mix = ctx.createGain();
       last.connect(mix); last.connect(delay); delay.connect(mix);
       const peak = ctx.createBiquadFilter();
-      peak.type = "peaking"; peak.frequency.value = 1200; peak.Q.value = 6; peak.gain.value = 6;
+      peak.type = "peaking"; peak.frequency.value = 1200; peak.Q.value = 6;
+      peak.gain.value = 3 + atAmount * 9;
       mix.connect(peak); last = peak;
       break;
     }
