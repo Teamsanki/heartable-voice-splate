@@ -3,6 +3,15 @@ import { db, VOICE_ROOT } from "./firebase";
 
 const DAY = 24 * 60 * 60 * 1000;
 
+/** Firebase rejects `undefined` values — strip them from previews. */
+export function cleanPreview<T extends Record<string, any>>(p: T): Record<string, any> {
+  const out: Record<string, any> = {};
+  Object.entries(p || {}).forEach(([k, v]) => {
+    if (v !== undefined) out[k] = v;
+  });
+  return out;
+}
+
 export type PostPreview = {
   name: string;
   text?: string;
@@ -29,7 +38,7 @@ export async function sharePostToStory(opts: {
     photo: opts.photo || null,
     kind: "post",
     postId: opts.postId,
-    postPreview: opts.preview,
+    postPreview: cleanPreview(opts.preview),
     url: opts.preview.url || "",
     filter: "none",
     durationSec: 6,
