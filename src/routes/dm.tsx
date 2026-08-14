@@ -50,7 +50,7 @@ function DMList() {
     return () => unsub();
   }, [user]);
 
-  // For the "Start new chat" + drawer — show only people you follow (any direction)
+  // Load all profiles so a user can start a conversation directly.
   useEffect(() => {
     if (!user || !showAdd) return;
     const unsub = onValue(ref(db, VOICE_ROOT), (snap) => {
@@ -108,17 +108,14 @@ function DMList() {
           <div className="text-center py-12 px-6">
             <MessageCircle className="size-10 mx-auto opacity-30" />
             <p className="text-sm font-semibold mt-3">No conversations yet</p>
-            <p className="text-xs opacity-60 mt-1">Chats unlock only when both of you follow each other. Tap the <b>+</b> button to find a friend.</p>
+            <p className="text-xs opacity-60 mt-1">Tap the <b>+</b> button to find someone and start chatting.</p>
           </div>
         )}
         {filteredFriends.map((p) => <FriendRow key={p.uid} p={p} />)}
       </div>
 
       {showAdd && (
-        <AddChatDrawer
-          users={allUsers.filter((u) => !friends.some((f) => f.uid === u.uid))}
-          onClose={() => setShowAdd(false)}
-        />
+        <AddChatDrawer users={allUsers} onClose={() => setShowAdd(false)} />
       )}
 
       <BottomNav />
@@ -186,7 +183,7 @@ function AddChatDrawer({ users, onClose }: { users: Person[]; onClose: () => voi
           </div>
         </div>
         <div className="overflow-y-auto p-2 space-y-1">
-          {list.length === 0 && <p className="text-center text-xs opacity-50 py-8">No matches. You can only chat with mutual followers.</p>}
+          {list.length === 0 && <p className="text-center text-xs opacity-50 py-8">No matching people found.</p>}
           {list.map((u) => (
             <Link key={u.uid} to="/dm/$uid" params={{ uid: u.uid }} onClick={onClose}
               className="flex items-center gap-3 p-2 rounded-xl hover:bg-foreground/5">

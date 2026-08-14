@@ -122,6 +122,15 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  input, textarea, select {
+    color: var(--color-foreground);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--color-muted-foreground);
+    opacity: 1;
+  }
+
   .font-serif {
     font-family: var(--font-serif);
   }

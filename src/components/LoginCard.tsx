@@ -29,10 +29,10 @@ export function LoginCard({ onDone }: { onDone?: () => void }) {
   };
 
   return (
-    <div className="w-full max-w-sm bg-white/80 backdrop-blur rounded-[28px] p-7 ring-1 ring-foreground/5 shadow-[0_30px_60px_-30px_oklch(0.66_0.19_38/0.3)] space-y-5">
+    <div className="w-full max-w-sm bg-card text-card-foreground backdrop-blur rounded-[28px] p-7 ring-1 ring-foreground/5 shadow-[0_30px_60px_-30px_oklch(0.66_0.19_38/0.3)] space-y-5">
       <div className="text-center space-y-1">
         <h2 className="font-serif italic text-3xl">Welcome back</h2>
-        <p className="text-xs text-sunset-900/60">
+        <p className="text-xs text-muted-foreground">
           Apni awaaz se baat shuru kar.
         </p>
       </div>
@@ -64,7 +64,7 @@ export function LoginCard({ onDone }: { onDone?: () => void }) {
             <span className="size-4 inline-block rounded-full bg-gradient-to-br from-red-400 via-yellow-400 to-blue-500" />
             Continue with Google
           </button>
-          <div className="flex items-center gap-3 text-[10px] text-sunset-900/40 uppercase tracking-widest">
+          <div className="flex items-center gap-3 text-[10px] text-muted-foreground uppercase tracking-widest">
             <div className="flex-1 h-px bg-foreground/10" /> or <div className="flex-1 h-px bg-foreground/10" />
           </div>
           <div className="space-y-2.5">
@@ -117,7 +117,7 @@ export function LoginCard({ onDone }: { onDone?: () => void }) {
             maxLength={50}
             className="w-full px-4 py-3 rounded-2xl bg-sunset-50 ring-1 ring-foreground/10 text-sm outline-none focus:ring-sunset-600"
           />
-          <p className="text-[11px] text-sunset-900/60 leading-relaxed">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
             Guest mode 7 din ke liye hai — sirf testing. Uske baad login karna hoga
             warna data delete ho jaayega.
           </p>
@@ -131,7 +131,7 @@ export function LoginCard({ onDone }: { onDone?: () => void }) {
         </div>
       )}
 
-      <label className="flex items-start gap-2 text-[11px] text-sunset-900/70 leading-relaxed">
+      <label className="flex items-start gap-2 text-[11px] text-muted-foreground leading-relaxed">
         <input
           type="checkbox"
           checked={agreed}
