@@ -85,7 +85,7 @@ function RecordPage() {
         <Recorder
           busy={busy}
           submitLabel="Share"
-          onSubmit={async (blob, filter: VoiceFilter, durationSec) => {
+          onSubmit={async (blob, filter: string, durationSec) => {
             setBusy(true);
             try {
               if (mode === "story") {

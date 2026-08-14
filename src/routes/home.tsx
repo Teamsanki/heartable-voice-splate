@@ -145,7 +145,7 @@ function Home() {
     return () => unsub();
   }, [user]);
 
-  const handleSubmit = async (blob: Blob, filter: VoiceFilter, durationSec: number) => {
+  const handleSubmit = async (blob: Blob, filter: string, durationSec: number) => {
     if (!user || !profile) return;
     if (isGuest && mode === "story") {
       alert("Stories sirf accounts ke liye. Profile se Google/Email link kar le.");
