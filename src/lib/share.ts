@@ -21,6 +21,8 @@ export type PostPreview = {
   fontId?: string;
   type?: string;
   url?: string;
+  filter?: string;
+  durationSec?: number;
 };
 
 /** Instagram-style "Add post to your story". */
@@ -40,8 +42,8 @@ export async function sharePostToStory(opts: {
     postId: opts.postId,
     postPreview: cleanPreview(opts.preview),
     url: opts.preview.url || "",
-    filter: "none",
-    durationSec: 6,
+    filter: opts.preview.filter || "none",
+    durationSec: Math.max(6, Math.round(opts.preview.durationSec || 0)),
     createdAt: Date.now(),
     expiresAt: Date.now() + DAY,
     replays: {},

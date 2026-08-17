@@ -269,6 +269,8 @@ export function FeedCard({ item }: { item: FeedItem }) {
             fontId: item.fontId,
             type: item.type,
             url: item.url,
+            filter: item.filter,
+            durationSec: item.durationSec,
           }}
           onClose={() => setShareOpen(false)}
         />
