@@ -166,8 +166,69 @@ export function ShareSheet({
           </button>
         </div>
 
+        {locked && (
+          <div className="m-4 rounded-2xl p-4 bg-sunset-100 ring-1 ring-sunset-600/20 space-y-2">
+            <p className="text-sm font-semibold">
+              {isGuest ? "Guest mode: sharing is limited" : "Sign in to share"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {isGuest
+                ? "Upgrade your guest account to add posts to your story, send them in Chats, and keep everything you've recorded."
+                : "Create a free account to add posts to your story and send them in Chats."}
+            </p>
+            <button
+              onClick={() => { onClose(); navigate({ to: "/login" }); }}
+              className="w-full py-2.5 rounded-full bg-sunset-600 text-white text-sm font-semibold"
+            >
+              {isGuest ? "Upgrade in one tap" : "Sign in"}
+            </button>
+          </div>
+        )}
+
+        {!locked && (
+          <div className="px-4 pt-4 space-y-3">
+            <div
+              className="rounded-2xl overflow-hidden ring-1 ring-foreground/10"
+              style={{
+                background: styledPreview.bgCss || "linear-gradient(135deg,#0a0a0a,#1a1a1a)",
+                color: styledPreview.fgColor || "#fff8ee",
+              }}
+            >
+              <div className="p-5 min-h-[110px] grid place-items-center text-center">
+                <p className="text-sm whitespace-pre-wrap break-words line-clamp-4">
+                  {storyCaption.trim() || preview.text || preview.caption || "🎙️ Voice post"}
+                </p>
+              </div>
+              {preview.url && <p className="text-[10px] px-3 py-2 bg-black/25">🎧 Voice plays inside the story</p>}
+            </div>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+              {COVERS.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setCoverId(c.id)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium ring-1 ${
+                    coverId === c.id ? "ring-sunset-600 bg-sunset-100" : "ring-foreground/10"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+            <input
+              value={storyCaption}
+              onChange={(e) => setStoryCaption(e.target.value)}
+              maxLength={120}
+              placeholder="Add a caption for your story…"
+              className="w-full px-4 py-2.5 rounded-full bg-foreground/5 text-sm outline-none"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Shared {stats.story} × to story · {stats.dm} × in Chats · {stats.link} link copies · {stats.replays} replays
+            </p>
+          </div>
+        )}
+
         <div className="p-4 grid grid-cols-2 gap-2">
-          <button onClick={toStory} disabled={busy || storyDone}
+          <button onClick={toStory} disabled={busy || storyDone || locked}
             className="flex items-center gap-2 px-3 py-3 rounded-2xl ring-1 ring-foreground/10 text-sm disabled:opacity-60">
             {storyDone ? <Check className="size-4 text-emerald-500" /> : <PlusCircle className="size-4" />}
             {storyDone ? "Added to story" : "Add to your story"}
@@ -231,7 +292,7 @@ export function ShareSheet({
               >
                 <MessageCircle className="size-4" />
               </button>
-              <button onClick={() => sendTo(f)} disabled={busy || sent.has(f.uid)}
+              <button onClick={() => sendTo(f)} disabled={busy || sent.has(f.uid) || locked}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 ${sent.has(f.uid) ? "bg-foreground/10 opacity-70" : "bg-sunset-600 text-white"}`}>
                 {sent.has(f.uid) ? <><Check className="size-3" /> Sent</> : <><Send className="size-3" /> Send</>}
               </button>
