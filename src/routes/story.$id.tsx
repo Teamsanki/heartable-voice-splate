@@ -18,7 +18,10 @@ export const Route = createFileRoute("/story/$id")({
 type Story = {
   kind?: "voice" | "post";
   postId?: string;
-  postPreview?: { name?: string; text?: string; caption?: string; bgCss?: string; fgColor?: string } | null;
+  postPreview?: {
+    name?: string; text?: string; caption?: string; bgCss?: string; fgColor?: string;
+    url?: string; filter?: string; durationSec?: number; type?: string;
+  } | null;
   url: string;
   filter: VoiceFilter;
   name: string;
@@ -176,21 +179,40 @@ function StoryPage() {
 
       <div className="flex-1 grid place-items-center">
         {story.kind === "post" ? (
-          <button
-            onClick={() => story.postId && navigate({ to: "/p/$id", params: { id: story.postId } })}
-            className="w-full max-w-sm rounded-3xl overflow-hidden text-left"
+          <div
+            className="w-full max-w-sm rounded-3xl overflow-hidden"
             style={{
               background: story.postPreview?.bgCss || "linear-gradient(135deg,#0a0a0a,#1a1a1a)",
               color: story.postPreview?.fgColor || "#fff8ee",
             }}
           >
-            <div className="p-8 min-h-[320px] grid place-items-center text-center">
-              <p className="text-2xl whitespace-pre-wrap break-words">
-                {story.postPreview?.text || story.postPreview?.caption || "🎙️ Voice post"}
-              </p>
-            </div>
-            <p className="text-[11px] px-4 py-3 bg-black/25">Tap to open post</p>
-          </button>
+            <button
+              onClick={() => story.postId && navigate({ to: "/p/$id", params: { id: story.postId } })}
+              className="w-full text-left"
+            >
+              <div className="p-8 min-h-[240px] grid place-items-center text-center">
+                <p className="text-2xl whitespace-pre-wrap break-words">
+                  {story.postPreview?.text || story.postPreview?.caption || "🎙️ Voice post"}
+                </p>
+              </div>
+            </button>
+            {(story.postPreview?.url || story.url) && (
+              <div className="px-4 pb-4">
+                <VoicePlayer
+                  url={(story.postPreview?.url || story.url) as string}
+                  filter={(story.postPreview?.filter || story.filter || "none") as VoiceFilter}
+                  durationSec={story.postPreview?.durationSec || story.durationSec || 0}
+                  onPlayComplete={onComplete}
+                />
+              </div>
+            )}
+            <button
+              onClick={() => story.postId && navigate({ to: "/p/$id", params: { id: story.postId } })}
+              className="w-full text-[11px] px-4 py-3 bg-black/25 text-left"
+            >
+              Tap to open post
+            </button>
+          </div>
         ) : (
         <div className="bg-white/10 backdrop-blur rounded-3xl p-8 w-full max-w-sm">
           <VoicePlayer
