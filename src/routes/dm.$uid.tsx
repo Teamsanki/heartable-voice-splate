@@ -110,16 +110,61 @@ function DMThread() {
   };
 
   if (!user || !profile) {
-    return <div className="min-h-screen grid place-items-center">Login first</div>;
+    return (
+      <div className="min-h-screen bg-background text-foreground grid place-items-center p-6 text-center">
+        <div className="max-w-xs">
+          <p className="font-serif italic text-3xl">Chat locked</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {user && !profile
+              ? "We couldn't load your profile yet. Retry after a moment — your chat will open right away."
+              : "You need to be signed in to open this chat. Sign in and we'll bring you straight back here."}
+          </p>
+          <div className="mt-5 flex flex-col gap-2">
+            <button
+              onClick={() => (user && !profile ? window.location.reload() : navigate({ to: "/login" }))}
+              className="px-4 py-2.5 rounded-full bg-sunset-600 text-white text-sm font-semibold"
+            >
+              {user && !profile ? "Retry" : "Sign in"}
+            </button>
+            <button onClick={() => navigate({ to: "/dm" })} className="text-sm text-muted-foreground underline">
+              Back to Chats
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gate === "loading") {
+    return (
+      <div className="min-h-screen bg-background text-muted-foreground grid place-items-center text-sm">
+        Opening chat…
+      </div>
+    );
   }
 
   if (gate === "blocked") {
-    return <div className="min-h-screen grid place-items-center p-6 text-center">
-      <div><p className="text-2xl font-serif italic">Heartable User</p>
-        <p className="text-sm opacity-60 mt-2">This chat is not available.</p>
-        <button onClick={() => navigate({ to: "/dm" })} className="mt-4 underline text-sm">Back</button>
+    return (
+      <div className="min-h-screen bg-background text-foreground grid place-items-center p-6 text-center">
+        <div className="max-w-xs">
+          <p className="text-2xl font-serif italic">Chat unavailable</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            This conversation is blocked. If permissions changed, retry to reload access.
+          </p>
+          <div className="mt-5 flex flex-col gap-2">
+            <button
+              onClick={() => setGate("loading")}
+              className="px-4 py-2.5 rounded-full bg-sunset-600 text-white text-sm font-semibold"
+            >
+              Retry
+            </button>
+            <button onClick={() => navigate({ to: "/dm" })} className="text-sm text-muted-foreground underline">
+              Back to Chats
+            </button>
+          </div>
+        </div>
       </div>
-    </div>;
+    );
   }
   return (
     <div className="min-h-screen bg-background text-foreground">
