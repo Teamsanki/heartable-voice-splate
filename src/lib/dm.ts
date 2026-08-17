@@ -1,6 +1,6 @@
 import { get, onValue, push, ref, remove, serverTimestamp, set, update } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
-import { cleanPreview } from "./share";
+import { cleanPreview, type PostPreview } from "./share";
 
 export function threadId(a: string, b: string) {
   return [a, b].sort().join("_");
@@ -19,7 +19,7 @@ export type DMMessage = {
   filter?: any;
   durationSec?: number;
   postId?: string;
-  postPreview?: { name: string; text?: string; bgCss?: string; fgColor?: string; type?: string } | null;
+  postPreview?: PostPreview | null;
   listened?: boolean;
   read?: boolean;
   createdAt: number;

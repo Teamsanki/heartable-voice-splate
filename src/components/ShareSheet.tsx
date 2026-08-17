@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { get, ref } from "firebase/database";
 import { X, Search, Link2, PlusCircle, Send, Check, MessageCircle } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
@@ -30,6 +31,9 @@ export function ShareSheet({
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
+  const ok = (msg: string) => { setStatus({ kind: "ok", msg }); toast.success(msg); };
+  const fail = (msg: string) => { setStatus({ kind: "err", msg }); toast.error(msg); };
+
   useEffect(() => {
     if (!status) return;
     const t = setTimeout(() => setStatus(null), 3500);
@@ -52,7 +56,7 @@ export function ShareSheet({
         setFriends(people.sort((a, b) => a.name.localeCompare(b.name)));
       })
       .catch((error) => {
-        if (!cancelled) setStatus({ kind: "err", msg: error?.message || "Could not load people." });
+        if (!cancelled) fail(error?.message || "Could not load people.");
       })
       .finally(() => { if (!cancelled) setLoadingPeople(false); });
     return () => { cancelled = true; };
@@ -66,22 +70,26 @@ export function ShareSheet({
   );
 
   const sendTo = async (f: Friend) => {
-    if (!user || !profile || sent.has(f.uid)) return;
+    if (sent.has(f.uid)) return;
+    if (!user || !profile) {
+      fail("Sign in to send this post in Chats.");
+      return;
+    }
     setBusy(true);
     try {
       await sendPostDM(user.uid, profile.name, f.uid, postId, preview, note);
       try { await recordShare(postId, user.uid); } catch { /* count only */ }
       setSent((s) => new Set(s).add(f.uid));
-      setStatus({ kind: "ok", msg: `Sent to ${f.name}` });
+      ok(`Sent to ${f.name}`);
     } catch (e: any) {
       console.error("share dm failed", e);
-      setStatus({ kind: "err", msg: e?.message || "Could not send. Try again." });
+      fail(e?.message || "Could not send. Try again.");
     } finally { setBusy(false); }
   };
 
   const toStory = async () => {
     if (!user || !profile) {
-      setStatus({ kind: "err", msg: "Sign in to add this post to your story." });
+      fail("Sign in to add this post to your story.");
       return;
     }
     if (storyDone) return;
@@ -90,10 +98,10 @@ export function ShareSheet({
       await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, preview });
       try { await recordShare(postId, user.uid); } catch { /* count only */ }
       setStoryDone(true);
-      setStatus({ kind: "ok", msg: "Added to your story — visible for 24h" });
+      ok("Added to your story — visible for 24h");
     } catch (e: any) {
       console.error("share story failed", e);
-      setStatus({ kind: "err", msg: e?.message || "Could not add to story." });
+      fail(e?.message || "Could not add to story.");
     } finally { setBusy(false); }
   };
 
@@ -113,10 +121,10 @@ export function ShareSheet({
         input.remove();
         if (!copied) throw new Error("Copy unavailable");
       }
-      setStatus({ kind: "ok", msg: "Link copied to clipboard" });
+      ok("Link copied to clipboard");
       try { await recordShare(postId, user?.uid); } catch { /* count only */ }
     } catch {
-      setStatus({ kind: "err", msg: "Could not copy the link. Please try again." });
+      fail("Could not copy the link. Please try again.");
     }
   };
 

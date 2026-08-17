@@ -11,6 +11,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { NotificationsBridge } from "@/components/NotificationsBridge";
 import { ThemeBridge } from "@/components/ThemeBridge";
 import { PresenceBridge } from "@/components/PresenceBridge";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -124,6 +125,7 @@ function RootComponent() {
         <NotificationsBridge />
         <PresenceBridge />
         <Outlet />
+        <Toaster position="top-center" richColors />
       </AuthProvider>
     </QueryClientProvider>
   );
