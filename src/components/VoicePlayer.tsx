@@ -44,9 +44,9 @@ export function VoicePlayer({
   };
 
   useEffect(() => {
-    if (!autoPlay) return;
     const a = audioRef.current;
     if (!a) return;
+    if (!autoPlay) { a.pause(); return; }
     if (!ctxRef.current) ctxRef.current = applyFilter(a, filter);
     a.play().catch(() => { /* autoplay blocked — user can tap play */ });
     // eslint-disable-next-line react-hooks/exhaustive-deps
