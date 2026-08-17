@@ -42,6 +42,7 @@ function StoryPage() {
   const [replayed, setReplayed] = useState(false);
   const [expired, setExpired] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   // Parse queue "id1:uid1,id2:uid2"
   const queue: { id: string; uid: string }[] = (q || "").split(",").filter(Boolean).map((s: string) => {
@@ -71,8 +72,9 @@ function StoryPage() {
   // Auto progress bar based on durationSec (min 5s)
   useEffect(() => {
     if (!story) return;
+    if (paused) return;
     const totalMs = Math.max(5, story.durationSec || 5) * 1000;
-    const start = Date.now();
+    const start = Date.now() - progress * totalMs;
     const t = setInterval(() => {
       const p = Math.min(1, (Date.now() - start) / totalMs);
       setProgress(p);
@@ -83,7 +85,8 @@ function StoryPage() {
       }
     }, 50);
     return () => clearInterval(t);
-  }, [story, next, navigate, q]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [story, next, navigate, q, paused]);
 
   const react = async (emoji: string) => {
     if (!user) return;
@@ -203,6 +206,7 @@ function StoryPage() {
                   filter={(story.postPreview?.filter || story.filter || "none") as VoiceFilter}
                   durationSec={story.postPreview?.durationSec || story.durationSec || 0}
                   onPlayComplete={onComplete}
+                  autoPlay={!paused}
                 />
               </div>
             )}
@@ -220,6 +224,7 @@ function StoryPage() {
             filter={story.filter}
             durationSec={story.durationSec}
             onPlayComplete={onComplete}
+            autoPlay={!paused}
           />
           {played && !replayed && (
             <p className="text-[10px] mt-4 text-center opacity-60">Replay 1x available</p>
@@ -232,6 +237,13 @@ function StoryPage() {
       </div>
 
       <div className="flex justify-center gap-3 pb-6">
+        <button
+          onClick={() => setPaused((p) => !p)}
+          aria-label={paused ? "Resume story" : "Pause story"}
+          className="px-4 h-12 rounded-full bg-white/10 hover:bg-white/20 text-sm font-semibold transition"
+        >
+          {paused ? "▶ Resume" : "⏸ Pause"}
+        </button>
         {["❤️", "🔥", "😢", "🥹"].map((e) => (
           <button
             key={e}
