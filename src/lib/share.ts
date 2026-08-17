@@ -1,4 +1,4 @@
-import { push, ref, set } from "firebase/database";
+import { onValue, push, ref, runTransaction, set } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -24,6 +24,44 @@ export type PostPreview = {
   filter?: string;
   durationSec?: number;
 };
+
+/* ---------- share analytics ---------- */
+
+export type ShareChannel = "dm" | "story" | "link";
+export type ShareStats = { dm: number; story: number; link: number; replays: number };
+
+export async function bumpShareStat(uid: string, postId: string, channel: ShareChannel) {
+  await runTransaction(
+    ref(db, `shareStats/${uid}/${postId}/${channel}`),
+    (n: any) => (n || 0) + 1,
+  );
+}
+
+/** Live counts of how a post was shared + how often the shared story was replayed. */
+export function listenShareStats(uid: string, postId: string, cb: (s: ShareStats) => void) {
+  const stats: ShareStats = { dm: 0, story: 0, link: 0, replays: 0 };
+  const emit = () => cb({ ...stats });
+
+  const u1 = onValue(ref(db, `shareStats/${uid}/${postId}`), (snap) => {
+    const v = snap.val() || {};
+    stats.dm = Number(v.dm || 0);
+    stats.story = Number(v.story || 0);
+    stats.link = Number(v.link || 0);
+    emit();
+  });
+
+  const u2 = onValue(ref(db, `${VOICE_ROOT}/${uid}/stories`), (snap) => {
+    let replays = 0;
+    snap.forEach((s) => {
+      const v = s.val();
+      if (v?.kind === "post" && v?.postId === postId) replays += Object.keys(v.replays || {}).length;
+    });
+    stats.replays = replays;
+    emit();
+  });
+
+  return () => { u1(); u2(); };
+}
 
 /** Instagram-style "Add post to your story". */
 export async function sharePostToStory(opts: {

@@ -7,12 +7,14 @@ export function VoicePlayer({
   durationSec,
   onPlayComplete,
   compact,
+  autoPlay,
 }: {
   url: string;
   filter?: VoiceFilter;
   durationSec?: number;
   onPlayComplete?: () => void;
   compact?: boolean;
+  autoPlay?: boolean;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ctxRef = useRef<{ cleanup: () => void } | null>(null);
@@ -40,6 +42,15 @@ export function VoicePlayer({
       console.error(e);
     }
   };
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (!autoPlay) { a.pause(); return; }
+    if (!ctxRef.current) ctxRef.current = applyFilter(a, filter);
+    a.play().catch(() => { /* autoplay blocked — user can tap play */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay, url]);
 
   const bars = 24;
   const seed = url.length;

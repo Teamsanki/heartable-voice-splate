@@ -254,19 +254,25 @@ function DMThread() {
                   <Link
                     to="/p/$id"
                     params={{ id: s.postId! }}
-                    className="block rounded-xl overflow-hidden"
+                    className="relative block rounded-xl overflow-hidden"
                     style={{ background: pv.bgCss || "linear-gradient(135deg,#0a0a0a,#1a1a1a)", color: pv.fgColor || "#fff8ee" }}
                   >
                     <div className="p-4 min-h-[110px] grid place-items-center text-center">
                       <p className="text-sm line-clamp-4">{pv.text || pv.caption || "🎙️ Voice post"}</p>
                     </div>
+                    {pv.url && (
+                      <span className="absolute bottom-2 left-2 text-[10px] px-2 py-1 rounded-full bg-black/45 text-white">
+                        🎧 Voice reel{pv.durationSec ? ` · ${Math.round(pv.durationSec)}s` : ""}
+                      </span>
+                    )}
                   </Link>
                   {pv.url && (
-                    <div className="mt-2">
+                    <div className="mt-2 rounded-xl bg-foreground/5 px-2">
                       <VoicePlayer
                         url={pv.url}
                         filter={(pv.filter || "none") as VoiceFilter}
                         durationSec={pv.durationSec || 0}
+                        compact
                       />
                     </div>
                   )}

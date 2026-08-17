@@ -62,6 +62,13 @@
       }
     },
 
+    "shareStats": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+
     "dm": {
       "$thread": {
         ".read": "auth != null && $thread.contains(auth.uid)",
