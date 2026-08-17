@@ -216,6 +216,15 @@ function DMThread() {
                       <p className="text-sm line-clamp-4">{pv.text || pv.caption || "🎙️ Voice post"}</p>
                     </div>
                   </Link>
+                  {pv.url && (
+                    <div className="mt-2">
+                      <VoicePlayer
+                        url={pv.url}
+                        filter={(pv.filter || "none") as VoiceFilter}
+                        durationSec={pv.durationSec || 0}
+                      />
+                    </div>
+                  )}
                   {s.text && <p className="text-sm mt-2">{s.text}</p>}
                   <p className="text-[10px] opacity-50 mt-1 text-right">{fromMe ? (s.read ? "Seen" : "Sent") : ""}</p>
                 </div>
