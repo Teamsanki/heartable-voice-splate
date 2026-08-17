@@ -7,9 +7,20 @@ import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { recordShare } from "@/lib/social";
 import { sendPostDM } from "@/lib/dm";
-import { sharePostToStory, type PostPreview } from "@/lib/share";
+import {
+  sharePostToStory, bumpShareStat, listenShareStats,
+  type PostPreview, type ShareStats,
+} from "@/lib/share";
 
 type Friend = { uid: string; name: string; photo?: string | null };
+
+const COVERS: { id: string; label: string; bgCss: string; fgColor: string }[] = [
+  { id: "original", label: "Original", bgCss: "", fgColor: "" },
+  { id: "sunset", label: "Sunset", bgCss: "linear-gradient(135deg,#ff8a4c,#d6336c)", fgColor: "#fff8ee" },
+  { id: "midnight", label: "Midnight", bgCss: "linear-gradient(135deg,#0f172a,#334155)", fgColor: "#f8fafc" },
+  { id: "gold", label: "Gold", bgCss: "linear-gradient(135deg,#f6d365,#b45309)", fgColor: "#1c1917" },
+  { id: "mint", label: "Mint", bgCss: "linear-gradient(135deg,#34d399,#0f766e)", fgColor: "#f0fdfa" },
+];
 
 export function ShareSheet({
   postId,
@@ -20,12 +31,16 @@ export function ShareSheet({
   preview: PostPreview;
   onClose: () => void;
 }) {
-  const { user, profile } = useAuth();
+  const { user, profile, isGuest } = useAuth();
   const navigate = useNavigate();
+  const locked = !user || !profile || isGuest;
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loadingPeople, setLoadingPeople] = useState(true);
   const [q, setQ] = useState("");
   const [note, setNote] = useState("");
+  const [storyCaption, setStoryCaption] = useState("");
+  const [coverId, setCoverId] = useState("original");
+  const [stats, setStats] = useState<ShareStats>({ dm: 0, story: 0, link: 0, replays: 0 });
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [storyDone, setStoryDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -33,6 +48,19 @@ export function ShareSheet({
 
   const ok = (msg: string) => { setStatus({ kind: "ok", msg }); toast.success(msg); };
   const fail = (msg: string) => { setStatus({ kind: "err", msg }); toast.error(msg); };
+
+  const cover = COVERS.find((c) => c.id === coverId) || COVERS[0];
+  const styledPreview: PostPreview = {
+    ...preview,
+    caption: storyCaption.trim() || preview.caption,
+    bgCss: cover.bgCss || preview.bgCss,
+    fgColor: cover.fgColor || preview.fgColor,
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    return listenShareStats(user.uid, postId, setStats);
+  }, [user, postId]);
 
   useEffect(() => {
     if (!status) return;
@@ -71,14 +99,12 @@ export function ShareSheet({
 
   const sendTo = async (f: Friend) => {
     if (sent.has(f.uid)) return;
-    if (!user || !profile) {
-      fail("Sign in to send this post in Chats.");
-      return;
-    }
+    if (!user || !profile || isGuest) return;
     setBusy(true);
     try {
-      await sendPostDM(user.uid, profile.name, f.uid, postId, preview, note);
+      await sendPostDM(user.uid, profile.name, f.uid, postId, styledPreview, note);
       try { await recordShare(postId, user.uid); } catch { /* count only */ }
+      try { await bumpShareStat(user.uid, postId, "dm"); } catch { /* stats only */ }
       setSent((s) => new Set(s).add(f.uid));
       ok(`Sent to ${f.name}`);
     } catch (e: any) {
@@ -88,15 +114,13 @@ export function ShareSheet({
   };
 
   const toStory = async () => {
-    if (!user || !profile) {
-      fail("Sign in to add this post to your story.");
-      return;
-    }
+    if (!user || !profile || isGuest) return;
     if (storyDone) return;
     setBusy(true);
     try {
-      await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, preview });
+      await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, preview: styledPreview });
       try { await recordShare(postId, user.uid); } catch { /* count only */ }
+      try { await bumpShareStat(user.uid, postId, "story"); } catch { /* stats only */ }
       setStoryDone(true);
       ok("Added to your story — visible for 24h");
     } catch (e: any) {
@@ -123,6 +147,7 @@ export function ShareSheet({
       }
       ok("Link copied to clipboard");
       try { await recordShare(postId, user?.uid); } catch { /* count only */ }
+      if (user) { try { await bumpShareStat(user.uid, postId, "link"); } catch { /* stats only */ } }
     } catch {
       fail("Could not copy the link. Please try again.");
     }
