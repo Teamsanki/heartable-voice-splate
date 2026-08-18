@@ -35,6 +35,16 @@ export async function bumpShareStat(uid: string, postId: string, channel: ShareC
     ref(db, `shareStats/${uid}/${postId}/${channel}`),
     (n: any) => (n || 0) + 1,
   );
+  const event = push(ref(db, `shareEvents/${uid}/${postId}`));
+  await set(event, { channel, createdAt: Date.now() });
+}
+
+export async function recordReplay(ownerUid: string, postId: string | undefined, storyId: string, viewerUid: string) {
+  if (postId) {
+    await runTransaction(ref(db, `shareStats/${ownerUid}/${postId}/replays`), (n: any) => (n || 0) + 1);
+    const event = push(ref(db, `shareEvents/${ownerUid}/${postId}`));
+    await set(event, { channel: "replay", storyId, viewerUid, createdAt: Date.now() });
+  }
 }
 
 /** Live counts of how a post was shared + how often the shared story was replayed. */

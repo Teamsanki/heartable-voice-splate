@@ -10,20 +10,42 @@ export type UserSettings = {
     comments: boolean;
     follows: boolean;
     broadcasts: boolean;
+    dmShares: boolean;
+    storyReactions: boolean;
+    storyReplays: boolean;
   };
   playback: {
     autoplay: boolean;
     wifiOnly: boolean;
   };
-  onlineActivity: boolean;
 };
 
-const DEFAULTS: UserSettings = { theme: "light", onlineActivity: true };
+export const DEFAULT_SETTINGS: UserSettings = {
+  theme: "light",
+  onlineActivity: true,
+  notifs: {
+    likes: true,
+    comments: true,
+    follows: true,
+    broadcasts: true,
+    dmShares: true,
+    storyReactions: true,
+    storyReplays: true,
+  },
+  playback: { autoplay: true, wifiOnly: false },
+};
 
 export function listenSettings(uid: string, cb: (s: UserSettings) => void) {
   return onValue(ref(db, `${VOICE_ROOT}/${uid}/settings`), (snap) => {
     const v = (snap.val() as Partial<UserSettings>) || {};
-    cb({ ...DEFAULTS, theme: (v.theme as Theme) || DEFAULTS.theme, onlineActivity: v.onlineActivity ?? DEFAULTS.onlineActivity });
+    cb({
+      ...DEFAULT_SETTINGS,
+      ...v,
+      theme: (v.theme as Theme) || DEFAULT_SETTINGS.theme,
+      onlineActivity: v.onlineActivity ?? DEFAULT_SETTINGS.onlineActivity,
+      notifs: { ...DEFAULT_SETTINGS.notifs, ...(v.notifs || {}) },
+      playback: { ...DEFAULT_SETTINGS.playback, ...(v.playback || {}) },
+    });
   });
 }
 
