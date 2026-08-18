@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { get, ref } from "firebase/database";
-import { X, Search, Link2, PlusCircle, Send, Check, MessageCircle } from "lucide-react";
+import { X, Search, Link2, PlusCircle, Send, Check, MessageCircle, SendHorizontal } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { recordShare } from "@/lib/social";
+import { listenFriends, recordShare } from "@/lib/social";
 import { sendPostDM } from "@/lib/dm";
 import {
   sharePostToStory, bumpShareStat, listenShareStats,
@@ -72,22 +70,12 @@ export function ShareSheet({
     if (!user) { setLoadingPeople(false); return; }
     let cancelled = false;
     setLoadingPeople(true);
-    get(ref(db, VOICE_ROOT))
-      .then((snap) => {
-        if (cancelled) return;
-        const people: Friend[] = [];
-        snap.forEach((child) => {
-          if (child.key === user.uid) return;
-          const p = child.child("profile").val() || {};
-          if (p.name) people.push({ uid: child.key || "", name: p.name, photo: p.photo || null });
-        });
-        setFriends(people.sort((a, b) => a.name.localeCompare(b.name)));
-      })
-      .catch((error) => {
-        if (!cancelled) fail(error?.message || "Could not load people.");
-      })
-      .finally(() => { if (!cancelled) setLoadingPeople(false); });
-    return () => { cancelled = true; };
+    const unsub = listenFriends(user.uid, (people) => {
+      if (cancelled) return;
+      setFriends(people.sort((a, b) => a.name.localeCompare(b.name)));
+      setLoadingPeople(false);
+    });
+    return () => { cancelled = true; unsub(); };
   }, [user]);
 
   const url = typeof location !== "undefined" ? `${location.origin}/p/${postId}` : "";
@@ -160,7 +148,7 @@ export function ShareSheet({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 flex items-center justify-between border-b border-foreground/10">
-          <h2 className="font-serif italic text-2xl">Share</h2>
+          <h2 className="font-serif italic text-2xl flex items-center gap-2"><SendHorizontal className="size-5" /> Share</h2>
           <button onClick={onClose} aria-label="Close" className="size-9 rounded-full bg-foreground/5 grid place-items-center">
             <X className="size-4" />
           </button>
@@ -264,7 +252,7 @@ export function ShareSheet({
           {!loadingPeople && list.length === 0 && (
             <div className="text-center py-8 space-y-2">
               <p className="text-xs opacity-50">
-                No people found yet.
+                 Follow each other to share privately.
               </p>
               <button
                 onClick={() => { onClose(); navigate({ to: "/dm" }); }}

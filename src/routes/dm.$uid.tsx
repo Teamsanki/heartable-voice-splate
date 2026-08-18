@@ -6,7 +6,8 @@ import { useAuth } from "@/lib/auth-context";
 import { Recorder } from "@/components/Recorder";
 import { VoicePlayer } from "@/components/VoicePlayer";
 import { postSnap } from "@/lib/voice-api";
-import { isMutuallyBlocked } from "@/lib/blocks";
+import { blockUser, isMutuallyBlocked } from "@/lib/blocks";
+import { areFriends } from "@/lib/social";
 import { submitReport } from "@/lib/reports";
 import {
   clearChatForMe, listenChatMuted, listenClearedAt, listenTyping,
@@ -34,7 +35,7 @@ function DMThread() {
   const [muted, setMuted] = useState(false);
   const [clearedAt, setClearedAt] = useState(0);
   const typingTimer = useRef<any>(null);
-  const [gate, setGate] = useState<"loading" | "ok" | "blocked">("loading");
+  const [gate, setGate] = useState<"loading" | "ok" | "blocked" | "not-friends">("loading");
 
   const threadId = user ? [user.uid, peerUid].sort().join("_") : null;
 
@@ -50,8 +51,10 @@ function DMThread() {
     (async () => {
       const blocked = await isMutuallyBlocked(user.uid, peerUid);
       if (blocked) { setGate("blocked"); return; }
+      const friends = await areFriends(user.uid, peerUid);
+      if (!friends) { setGate("not-friends"); return; }
       setGate("ok");
-    })().catch(() => setGate("ok"));
+    })().catch(() => setGate("not-friends"));
   }, [user, peerUid]);
 
   useEffect(() => {
@@ -143,13 +146,13 @@ function DMThread() {
     );
   }
 
-  if (gate === "blocked") {
+  if (gate === "blocked" || gate === "not-friends") {
     return (
       <div className="min-h-screen bg-background text-foreground grid place-items-center p-6 text-center">
         <div className="max-w-xs">
-          <p className="text-2xl font-serif italic">Chat unavailable</p>
+          <p className="text-2xl font-serif italic">{gate === "blocked" ? "Chat unavailable" : "Private chat"}</p>
           <p className="text-sm text-muted-foreground mt-2">
-            This conversation is blocked. If permissions changed, retry to reload access.
+            {gate === "blocked" ? "This conversation is blocked. If permissions changed, retry to reload access." : "You can message only after you both follow each other. Follow back, then retry here."}
           </p>
           <div className="mt-5 flex flex-col gap-2">
             <button
@@ -190,6 +193,14 @@ function DMThread() {
             }}
             className="text-[11px] px-3 py-1 rounded-full bg-red-500/15 text-red-600"
           >🚩 Report</button>
+          <button
+            onClick={async () => {
+              if (!confirm(`Block ${peerName}?`)) return;
+              await blockUser(user.uid, peerUid);
+              navigate({ to: "/dm" });
+            }}
+            className="text-[11px] px-3 py-1 rounded-full bg-foreground/10"
+          >Block</button>
           <button
             onClick={() => setChatMuted(user.uid, peerUid, !muted)}
             aria-label={muted ? "Unmute chat" : "Mute chat"}
@@ -277,6 +288,16 @@ function DMThread() {
                     </div>
                   )}
                   {s.text && <p className="text-sm mt-2">{s.text}</p>}
+                  <p className="text-[10px] opacity-50 mt-1 text-right">{fromMe ? (s.read ? "Seen" : "Sent") : ""}</p>
+                </div>
+              );
+            }
+            if (s.kind === "story-reaction" || s.kind === "story-reply") {
+              return (
+                <div key={s.id} className={bubble}>
+                  <p className="text-[10px] opacity-50 mb-1">Replied to a story</p>
+                  {s.emoji && <p className="text-3xl">{s.emoji}</p>}
+                  {s.text && <p className="text-sm whitespace-pre-wrap">{s.text}</p>}
                   <p className="text-[10px] opacity-50 mt-1 text-right">{fromMe ? (s.read ? "Seen" : "Sent") : ""}</p>
                 </div>
               );
