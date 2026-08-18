@@ -5,6 +5,17 @@ export type Theme = "dark" | "light" | "system";
 export type UserSettings = {
   theme: Theme;
   onlineActivity: boolean;
+  notifs: {
+    likes: boolean;
+    comments: boolean;
+    follows: boolean;
+    broadcasts: boolean;
+  };
+  playback: {
+    autoplay: boolean;
+    wifiOnly: boolean;
+  };
+  onlineActivity: boolean;
 };
 
 const DEFAULTS: UserSettings = { theme: "light", onlineActivity: true };
