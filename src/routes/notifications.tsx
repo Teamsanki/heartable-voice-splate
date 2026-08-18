@@ -68,6 +68,7 @@ function NotifRow({ n }: { n: Notif }) {
     </div>
   );
 
+  if (n.peerUid) return <Link to="/dm/$uid" params={{ uid: n.peerUid }}>{body}</Link>;
   if (n.postId) return <Link to="/p/$id" params={{ id: n.postId }}>{body}</Link>;
   return body;
 }

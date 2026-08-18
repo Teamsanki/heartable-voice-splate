@@ -25,6 +25,7 @@ import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as DmRouteImport } from './routes/dm'
 import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as BannedRouteImport } from './routes/banned'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TagTagRouteImport } from './routes/tag.$tag'
@@ -116,6 +117,11 @@ const BannedRoute = BannedRouteImport.update({
   path: '/banned',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -171,6 +177,7 @@ const ApiPublicNotifyEmailRoute = ApiPublicNotifyEmailRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/analytics': typeof AnalyticsRoute
   '/banned': typeof BannedRoute
   '/bookmarks': typeof BookmarksRoute
   '/dm': typeof DmRouteWithChildren
@@ -199,6 +206,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/analytics': typeof AnalyticsRoute
   '/banned': typeof BannedRoute
   '/bookmarks': typeof BookmarksRoute
   '/dm': typeof DmRouteWithChildren
@@ -228,6 +236,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/analytics': typeof AnalyticsRoute
   '/banned': typeof BannedRoute
   '/bookmarks': typeof BookmarksRoute
   '/dm': typeof DmRouteWithChildren
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/analytics'
     | '/banned'
     | '/bookmarks'
     | '/dm'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/analytics'
     | '/banned'
     | '/bookmarks'
     | '/dm'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/analytics'
     | '/banned'
     | '/bookmarks'
     | '/dm'
@@ -343,6 +355,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   BannedRoute: typeof BannedRoute
   BookmarksRoute: typeof BookmarksRoute
   DmRoute: typeof DmRouteWithChildren
@@ -480,6 +493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BannedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -588,6 +608,7 @@ const ProfileRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AnalyticsRoute: AnalyticsRoute,
   BannedRoute: BannedRoute,
   BookmarksRoute: BookmarksRoute,
   DmRoute: DmRouteWithChildren,
