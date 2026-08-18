@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { applyFilter, type VoiceFilter } from "@/lib/audio-filters";
+import { useAuth } from "@/lib/auth-context";
+import { listenSettings } from "@/lib/settings";
 
 export function VoicePlayer({
   url,
@@ -7,7 +9,7 @@ export function VoicePlayer({
   durationSec,
   onPlayComplete,
   compact,
-  autoPlay,
+  autoPlay: propAutoPlay,
 }: {
   url: string;
   filter?: VoiceFilter;
@@ -16,10 +18,16 @@ export function VoicePlayer({
   compact?: boolean;
   autoPlay?: boolean;
 }) {
+  const { user } = useAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ctxRef = useRef<{ cleanup: () => void } | null>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [settings, setSettings] = useState<any>(null);
+
+  useEffect(() => {
+    if (user) return listenSettings(user.uid, setSettings);
+  }, [user]);
 
   useEffect(() => {
     return () => {
@@ -46,11 +54,24 @@ export function VoicePlayer({
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    if (!autoPlay) { a.pause(); return; }
+
+    let shouldAuto = propAutoPlay;
+    if (settings?.playback) {
+      if (settings.playback.autoplay === false) shouldAuto = false;
+      
+      // Basic WiFi-only check (Network Information API)
+      const conn = (navigator as any).connection;
+      if (settings.playback.wifiOnly && conn) {
+        if (conn.type !== 'wifi' && conn.effectiveType !== 'wifi' && conn.saveData) {
+           shouldAuto = false;
+        }
+      }
+    }
+
+    if (!shouldAuto) { a.pause(); return; }
     if (!ctxRef.current) ctxRef.current = applyFilter(a, filter);
-    a.play().catch(() => { /* autoplay blocked — user can tap play */ });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoPlay, url]);
+    a.play().catch(() => { /* autoplay blocked */ });
+  }, [propAutoPlay, url, settings]);
 
   const bars = 24;
   const seed = url.length;
