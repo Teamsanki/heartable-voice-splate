@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { BarChart3, ChevronLeft, MessageCircle, Repeat2, SendHorizontal } from "lucide-react";
 import { MobileShell } from "@/components/MobileShell";
 import { BottomNav } from "@/components/BottomNav";
@@ -51,6 +52,6 @@ function CreatorAnalyticsPage() {
   </MobileShell>;
 }
 
-function Metric({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
+function Metric({ icon, value, label }: { icon: ReactNode; value: number; label: string }) {
   return <div className="bg-card rounded-xl p-3 ring-1 ring-border text-center"><span className="mx-auto block w-fit opacity-50">{icon}</span><p className="font-serif italic text-2xl">{value}</p><p className="text-[10px] text-muted-foreground">{label}</p></div>;
 }

@@ -80,6 +80,9 @@ function SettingsPage() {
         <Row icon={<MessageSquare className="size-4" />} label="Comments" right={<Toggle on={settings.notifs.comments} onChange={() => updateNotifs("comments")} />} />
         <Row icon={<UserPlus className="size-4" />} label="Follows" right={<Toggle on={settings.notifs.follows} onChange={() => updateNotifs("follows")} />} />
         <Row icon={<Radio className="size-4" />} label="Broadcasts" right={<Toggle on={settings.notifs.broadcasts} onChange={() => updateNotifs("broadcasts")} />} />
+        <Row icon={<MessageSquare className="size-4" />} label="Posts sent in Chats" right={<Toggle on={settings.notifs.dmShares} onChange={() => updateNotifs("dmShares")} />} />
+        <Row icon={<Heart className="size-4" />} label="Story reactions" right={<Toggle on={settings.notifs.storyReactions} onChange={() => updateNotifs("storyReactions")} />} />
+        <Row icon={<Play className="size-4" />} label="Story replays" right={<Toggle on={settings.notifs.storyReplays} onChange={() => updateNotifs("storyReplays")} />} />
       </Section>
 
       <Section title="Playback">
