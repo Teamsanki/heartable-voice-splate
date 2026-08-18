@@ -22,10 +22,12 @@ const COVERS: { id: string; label: string; bgCss: string; fgColor: string }[] = 
 
 export function ShareSheet({
   postId,
+  ownerUid,
   preview,
   onClose,
 }: {
   postId: string;
+  ownerUid: string;
   preview: PostPreview;
   onClose: () => void;
 }) {
@@ -57,8 +59,8 @@ export function ShareSheet({
 
   useEffect(() => {
     if (!user) return;
-    return listenShareStats(user.uid, postId, setStats);
-  }, [user, postId]);
+    return listenShareStats(ownerUid, postId, setStats);
+  }, [user, ownerUid, postId]);
 
   useEffect(() => {
     if (!status) return;
@@ -92,7 +94,7 @@ export function ShareSheet({
     try {
       await sendPostDM(user.uid, profile.name, f.uid, postId, styledPreview, note);
       try { await recordShare(postId, user.uid); } catch { /* count only */ }
-      try { await bumpShareStat(user.uid, postId, "dm"); } catch { /* stats only */ }
+      try { await bumpShareStat(ownerUid, postId, "dm"); } catch { /* stats only */ }
       setSent((s) => new Set(s).add(f.uid));
       ok(`Sent to ${f.name}`);
     } catch (e: any) {
@@ -106,9 +108,9 @@ export function ShareSheet({
     if (storyDone) return;
     setBusy(true);
     try {
-      await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, preview: styledPreview });
+      await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, postOwnerUid: ownerUid, preview: styledPreview });
       try { await recordShare(postId, user.uid); } catch { /* count only */ }
-      try { await bumpShareStat(user.uid, postId, "story"); } catch { /* stats only */ }
+      try { await bumpShareStat(ownerUid, postId, "story"); } catch { /* stats only */ }
       setStoryDone(true);
       ok("Added to your story — visible for 24h");
     } catch (e: any) {
@@ -135,7 +137,7 @@ export function ShareSheet({
       }
       ok("Link copied to clipboard");
       try { await recordShare(postId, user?.uid); } catch { /* count only */ }
-      if (user) { try { await bumpShareStat(user.uid, postId, "link"); } catch { /* stats only */ } }
+      if (user) { try { await bumpShareStat(ownerUid, postId, "link"); } catch { /* stats only */ } }
     } catch {
       fail("Could not copy the link. Please try again.");
     }

@@ -79,6 +79,7 @@ export async function sharePostToStory(opts: {
   name: string;
   photo?: string | null;
   postId: string;
+  postOwnerUid: string;
   preview: PostPreview;
 }) {
   const node = push(ref(db, `${VOICE_ROOT}/${opts.uid}/stories`));
@@ -88,6 +89,7 @@ export async function sharePostToStory(opts: {
     photo: opts.photo || null,
     kind: "post",
     postId: opts.postId,
+    postOwnerUid: opts.postOwnerUid,
     postPreview: cleanPreview(opts.preview),
     url: opts.preview.url || "",
     filter: opts.preview.filter || "none",

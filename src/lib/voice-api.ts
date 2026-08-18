@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { bumpStreak } from "./streak";
 import { indexPostHashtags } from "./hashtags";
 import type { VoiceFilter } from "./audio-filters";
+import { areFriends } from "./social";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -115,6 +116,7 @@ export async function postSnap(opts: {
   filter: VoiceFilter | string;
   durationSec: number;
 }) {
+  if (!(await areFriends(opts.uid, opts.toUid))) throw new Error("You can only message mutual followers.");
   const { url } = await uploadBlob(opts.uid, opts.blob, "snaps");
   const node = push(dbRef(db, `dm/${[opts.uid, opts.toUid].sort().join("_")}/messages`));
   await set(node, {

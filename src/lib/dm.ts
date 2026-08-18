@@ -33,6 +33,7 @@ export type DMMessage = {
 /* ---------- send ---------- */
 
 export async function sendTextDM(fromUid: string, fromName: string, toUid: string, text: string) {
+  if (!(await areFriends(fromUid, toUid))) throw new Error("You can only message mutual followers.");
   const t = text.trim().slice(0, 1000);
   if (!t) return;
   const node = push(ref(db, `dm/${threadId(fromUid, toUid)}/messages`));
