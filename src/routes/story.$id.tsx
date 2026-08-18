@@ -144,7 +144,7 @@ function StoryPage() {
   };
 
   const onComplete = async () => {
-    if (!user) return;
+    if (!user || !story) return;
     if (!played) {
       setPlayed(true);
       await update(ref(db, `${VOICE_ROOT}/${uid}/stories/${id}/replays`), {
