@@ -12,6 +12,10 @@ export const Route = createFileRoute("/")({
         content:
           "Voice-first social app for shayari, voice snaps and Mehfil circles. Record, share, react.",
       },
+      { property: "og:title", content: "Heartable — Voices of the Soul" },
+      { property: "og:description", content: "Voice-first social app for shayari, voice snaps and Mehfil circles." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { get, onValue, ref, runTransaction, update } from "firebase/database";
+import { onValue, ref, runTransaction, update } from "firebase/database";
 import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { VoicePlayer } from "@/components/VoicePlayer";
@@ -71,7 +71,7 @@ function StoryPage() {
 
   useEffect(() => {
     setStory(null); setPlayed(false); setReplayed(false); setExpired(false); setProgress(0);
-    get(ref(db, `${VOICE_ROOT}/${uid}/stories/${id}`)).then((snap) => {
+    const off = onValue(ref(db, `${VOICE_ROOT}/${uid}/stories/${id}`), (snap) => {
       const v = snap.val();
       if (!v) {
         setExpired(true);
@@ -83,10 +83,11 @@ function StoryPage() {
       }
       setStory(v);
     });
+    return () => off();
   }, [id, uid]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !story) return;
     return listenSettings(user.uid, (settings) => {
       const connection = navigator as Navigator & { connection?: { type?: string } };
       setAllowAutoplay(settings.playback.autoplay && (!settings.playback.wifiOnly || connection.connection?.type === "wifi"));

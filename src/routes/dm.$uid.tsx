@@ -288,6 +288,10 @@ function DMThread() {
                     </div>
                   )}
                   {s.text && <p className="text-sm mt-2">{s.text}</p>}
+                  {!fromMe && <div className="mt-2 flex gap-3 text-[10px]">
+                    <button onClick={async () => { const reason = prompt("Why are you reporting this shared post?"); if (!reason) return; await submitReport({ kind: "chat", targetId: s.id, targetUid: s.uid, reporterUid: user.uid, reporterName: profile.name, reason }); alert("Report submitted."); }} className="underline opacity-70">Report</button>
+                    <button onClick={async () => { if (!confirm(`Block ${s.name || peerName}?`)) return; await blockUser(user.uid, s.uid); navigate({ to: "/dm" }); }} className="underline opacity-70">Block</button>
+                  </div>}
                   <p className="text-[10px] opacity-50 mt-1 text-right">{fromMe ? (s.read ? "Seen" : "Sent") : ""}</p>
                 </div>
               );
