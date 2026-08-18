@@ -1,10 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { get, ref, update } from "firebase/database";
+import { onValue, ref, runTransaction, update } from "firebase/database";
 import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { VoicePlayer } from "@/components/VoicePlayer";
 import type { VoiceFilter } from "@/lib/audio-filters";
+import { toast } from "sonner";
+import { Recorder } from "@/components/Recorder";
+import { postSnap } from "@/lib/voice-api";
+import { sendStoryReactionDM } from "@/lib/dm";
+import { blockUser } from "@/lib/blocks";
+import { submitReport } from "@/lib/reports";
+import { pushNotif } from "@/lib/notifications-store";
+import { recordReplay } from "@/lib/share";
+import { DEFAULT_SETTINGS, listenSettings } from "@/lib/settings";
+import { Eye, Flag, Mic, Send, UserX } from "lucide-react";
 
 export const Route = createFileRoute("/story/$id")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -18,6 +28,7 @@ export const Route = createFileRoute("/story/$id")({
 type Story = {
   kind?: "voice" | "post";
   postId?: string;
+  postOwnerUid?: string;
   postPreview?: {
     name?: string; text?: string; caption?: string; bgCss?: string; fgColor?: string;
     url?: string; filter?: string; durationSec?: number; type?: string;
@@ -30,12 +41,13 @@ type Story = {
   expiresAt: number;
   replays?: Record<string, number>;
   reactions?: Record<string, string>;
+  viewers?: Record<string, { count: number; firstSeenAt: number; lastSeenAt: number; name: string; photo?: string | null }>;
 };
 
 function StoryPage() {
   const { id } = Route.useParams();
   const { uid, q } = Route.useSearch();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [story, setStory] = useState<Story | null>(null);
   const [played, setPlayed] = useState(false);
@@ -43,6 +55,10 @@ function StoryPage() {
   const [expired, setExpired] = useState(false);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [reply, setReply] = useState("");
+  const [voiceReply, setVoiceReply] = useState(false);
+  const [showViewers, setShowViewers] = useState(false);
+  const [allowAutoplay, setAllowAutoplay] = useState(true);
 
   // Parse queue "id1:uid1,id2:uid2"
   const queue: { id: string; uid: string }[] = (q || "").split(",").filter(Boolean).map((s: string) => {
@@ -55,7 +71,7 @@ function StoryPage() {
 
   useEffect(() => {
     setStory(null); setPlayed(false); setReplayed(false); setExpired(false); setProgress(0);
-    get(ref(db, `${VOICE_ROOT}/${uid}/stories/${id}`)).then((snap) => {
+    const off = onValue(ref(db, `${VOICE_ROOT}/${uid}/stories/${id}`), (snap) => {
       const v = snap.val();
       if (!v) {
         setExpired(true);
@@ -67,7 +83,31 @@ function StoryPage() {
       }
       setStory(v);
     });
+    return () => off();
   }, [id, uid]);
+
+  useEffect(() => {
+    if (!user || !story) return;
+    return listenSettings(user.uid, (settings) => {
+      const connection = navigator as Navigator & { connection?: { type?: string } };
+      setAllowAutoplay(settings.playback.autoplay && (!settings.playback.wifiOnly || connection.connection?.type === "wifi"));
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !profile || user.uid === uid) return;
+    const viewerRef = ref(db, `${VOICE_ROOT}/${uid}/stories/${id}/viewers/${user.uid}`);
+    runTransaction(viewerRef, (current) => ({
+      count: Number(current?.count || 0) + 1,
+      firstSeenAt: Number(current?.firstSeenAt || Date.now()),
+      lastSeenAt: Date.now(),
+      name: profile.name,
+      photo: profile.photo || null,
+    })).then((result) => {
+      const count = Number(result.snapshot.val()?.count || 1);
+      if (count > 1) pushNotif(uid, { kind: "story-replay", fromUid: user.uid, fromName: profile.name, storyId: id, text: `rewatched your story · ${count} views` }).catch(() => {});
+    }).catch(() => {});
+  }, [user, profile, uid, id]);
 
   // Auto progress bar based on durationSec (min 5s)
   useEffect(() => {
@@ -89,14 +129,22 @@ function StoryPage() {
   }, [story, next, navigate, q, paused]);
 
   const react = async (emoji: string) => {
-    if (!user) return;
+    if (!user || !profile || user.uid === uid) return;
     await update(ref(db, `${VOICE_ROOT}/${uid}/stories/${id}/reactions`), {
       [user.uid]: emoji,
     });
+    await sendStoryReactionDM({ fromUid: user.uid, fromName: profile.name, toUid: uid, storyId: id, emoji });
+    toast.success("Reaction sent in Chats");
+  };
+
+  const sendReply = async () => {
+    if (!user || !profile || !reply.trim() || user.uid === uid) return;
+    await sendStoryReactionDM({ fromUid: user.uid, fromName: profile.name, toUid: uid, storyId: id, text: reply });
+    setReply(""); toast.success("Reply sent in Chats");
   };
 
   const onComplete = async () => {
-    if (!user) return;
+    if (!user || !story) return;
     if (!played) {
       setPlayed(true);
       await update(ref(db, `${VOICE_ROOT}/${uid}/stories/${id}/replays`), {
@@ -104,6 +152,7 @@ function StoryPage() {
       });
     } else if (!replayed) {
       setReplayed(true);
+      await recordReplay(story.postOwnerUid || uid, story.postId, id, user.uid);
     }
   };
 
@@ -175,9 +224,13 @@ function StoryPage() {
             </p>
           </div>
         </div>
-        <button onClick={() => navigate({ to: "/home" })} className="text-2xl opacity-60">
-          ✕
-        </button>
+        <div className="flex items-center gap-2">
+          {user?.uid !== uid && <>
+            <button aria-label="Report story" onClick={async () => { const reason = prompt("Why are you reporting this story?"); if (!reason || !user || !profile) return; await submitReport({ kind: "story", targetId: id, targetUid: uid, reporterUid: user.uid, reporterName: profile.name, reason }); toast.success("Report submitted"); }} className="size-9 rounded-full bg-white/10 grid place-items-center"><Flag className="size-4" /></button>
+            <button aria-label="Block creator" onClick={async () => { if (!user || !confirm(`Block ${story.name}?`)) return; await blockUser(user.uid, uid); navigate({ to: "/home" }); }} className="size-9 rounded-full bg-white/10 grid place-items-center"><UserX className="size-4" /></button>
+          </>}
+          <button onClick={() => navigate({ to: "/home" })} className="text-2xl opacity-60">✕</button>
+        </div>
       </div>
 
       <div className="flex-1 grid place-items-center">
@@ -206,7 +259,7 @@ function StoryPage() {
                   filter={(story.postPreview?.filter || story.filter || "none") as VoiceFilter}
                   durationSec={story.postPreview?.durationSec || story.durationSec || 0}
                   onPlayComplete={onComplete}
-                  autoPlay={!paused}
+                   autoPlay={!paused && allowAutoplay}
                 />
               </div>
             )}
@@ -224,7 +277,7 @@ function StoryPage() {
             filter={story.filter}
             durationSec={story.durationSec}
             onPlayComplete={onComplete}
-            autoPlay={!paused}
+             autoPlay={!paused && allowAutoplay}
           />
           {played && !replayed && (
             <p className="text-[10px] mt-4 text-center opacity-60">Replay 1x available</p>
@@ -254,6 +307,19 @@ function StoryPage() {
           </button>
         ))}
       </div>
+      {user?.uid === uid ? (
+        <div className="pb-4">
+          <button onClick={() => setShowViewers((value) => !value)} className="mx-auto flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm"><Eye className="size-4" /> {Object.keys(story.viewers || {}).length} viewers · {Object.values(story.viewers || {}).reduce((sum, viewer) => sum + viewer.count, 0)} views</button>
+          {showViewers && <div className="mt-2 max-h-40 overflow-y-auto rounded-xl bg-black/20 p-2 space-y-1">{Object.entries(story.viewers || {}).map(([viewerUid, viewer]) => <div key={viewerUid} className="flex items-center justify-between text-xs p-2"><span>{viewer.name}</span><span>{viewer.count > 1 ? `Rewatched ${viewer.count - 1}×` : "Viewed"}</span></div>)}</div>}
+        </div>
+      ) : user && profile ? (
+        <div className="pb-4 flex gap-2">
+          <input value={reply} onChange={(event) => setReply(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") sendReply(); }} placeholder="Reply to story…" className="flex-1 rounded-full bg-white/10 px-4 text-sm placeholder:text-white/60 outline-none" />
+          <button onClick={() => setVoiceReply((value) => !value)} aria-label="Voice reaction" className="size-11 rounded-full bg-white/10 grid place-items-center"><Mic /></button>
+          <button onClick={sendReply} aria-label="Send reply" className="size-11 rounded-full bg-white/15 grid place-items-center"><Send /></button>
+        </div>
+      ) : null}
+      {voiceReply && user && profile && user.uid !== uid && <div className="pb-5"><Recorder submitLabel="Send voice reaction" busy={false} onSubmit={async (blob, filter, durationSec) => { await postSnap({ uid: user.uid, name: profile.name, toUid: uid, blob, filter, durationSec }); setVoiceReply(false); toast.success("Voice reaction sent in Chats"); }} /></div>}
     </div>
   );
 }

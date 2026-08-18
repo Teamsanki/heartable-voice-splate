@@ -5,9 +5,9 @@ import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { MobileShell } from "@/components/MobileShell";
 import { BottomNav } from "@/components/BottomNav";
-import { listenSettings, saveSettings, type Theme } from "@/lib/settings";
+import { listenSettings, saveSettings, type Theme, type UserSettings } from "@/lib/settings";
 import { listenMyBlocks, unblockUser } from "@/lib/blocks";
-import { ChevronLeft, Moon, Sun, Bell, HelpCircle, LogOut, FileText, UserX, BookOpen } from "lucide-react";
+import { ChevronLeft, Moon, Sun, Bell, HelpCircle, LogOut, FileText, UserX, BookOpen, Play, Wifi, Heart, MessageSquare, UserPlus, Radio } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — Heartable" }] }),
@@ -17,14 +17,13 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [theme, setTheme] = useState<Theme>("dark");
-  const [online, setOnline] = useState(true);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [blocks, setBlocks] = useState<Set<string>>(new Set());
   const [blockNames, setBlockNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
-    const u1 = listenSettings(user.uid, (s) => { setTheme(s.theme); setOnline(s.onlineActivity); });
+    const u1 = listenSettings(user.uid, setSettings);
     const u2 = listenMyBlocks(user.uid, setBlocks);
     return () => { u1(); u2(); };
   }, [user]);
@@ -36,13 +35,25 @@ function SettingsPage() {
         setBlockNames((p) => ({ ...p, [uid]: s.val() || "User" }));
       });
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blocks]);
+  }, [blocks, blockNames]);
 
   if (!user) return <div className="min-h-screen grid place-items-center">Login first</div>;
+  if (!settings) return null;
 
-  const setT = (t: Theme) => { setTheme(t); saveSettings(user.uid, { theme: t }); };
-  const setO = (v: boolean) => { setOnline(v); saveSettings(user.uid, { onlineActivity: v }); };
+  const updateSettings = (patch: Partial<UserSettings>) => {
+    setSettings(prev => prev ? { ...prev, ...patch } : null);
+    saveSettings(user.uid, patch);
+  };
+
+  const updateNotifs = (key: keyof UserSettings["notifs"]) => {
+    const newVal = !settings.notifs[key];
+    updateSettings({ notifs: { ...settings.notifs, [key]: newVal } });
+  };
+
+  const updatePlayback = (key: keyof UserSettings["playback"]) => {
+    const newVal = !settings.playback[key];
+    updateSettings({ playback: { ...settings.playback, [key]: newVal } });
+  };
 
   return (
     <MobileShell className="p-5 gap-4">
@@ -56,17 +67,32 @@ function SettingsPage() {
       <Section title="Appearance">
         <div className="grid grid-cols-3 gap-2">
           {(["dark", "light", "system"] as Theme[]).map((t) => (
-            <button key={t} onClick={() => setT(t)}
-              className={`py-2.5 rounded-xl text-xs font-medium ring-1 ${theme === t ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-card ring-foreground/10"}`}>
+            <button key={t} onClick={() => updateSettings({ theme: t })}
+              className={`py-2.5 rounded-xl text-xs font-medium ring-1 ${settings.theme === t ? "bg-sunset-900 text-sunset-50 ring-sunset-900" : "bg-card ring-foreground/10"}`}>
               {t === "dark" ? <Moon className="size-4 inline mr-1" /> : t === "light" ? <Sun className="size-4 inline mr-1" /> : "💻"} {t}
             </button>
           ))}
         </div>
       </Section>
 
+      <Section title="Notifications">
+        <Row icon={<Heart className="size-4" />} label="Likes" right={<Toggle on={settings.notifs.likes} onChange={() => updateNotifs("likes")} />} />
+        <Row icon={<MessageSquare className="size-4" />} label="Comments" right={<Toggle on={settings.notifs.comments} onChange={() => updateNotifs("comments")} />} />
+        <Row icon={<UserPlus className="size-4" />} label="Follows" right={<Toggle on={settings.notifs.follows} onChange={() => updateNotifs("follows")} />} />
+        <Row icon={<Radio className="size-4" />} label="Broadcasts" right={<Toggle on={settings.notifs.broadcasts} onChange={() => updateNotifs("broadcasts")} />} />
+        <Row icon={<MessageSquare className="size-4" />} label="Posts sent in Chats" right={<Toggle on={settings.notifs.dmShares} onChange={() => updateNotifs("dmShares")} />} />
+        <Row icon={<Heart className="size-4" />} label="Story reactions" right={<Toggle on={settings.notifs.storyReactions} onChange={() => updateNotifs("storyReactions")} />} />
+        <Row icon={<Play className="size-4" />} label="Story replays" right={<Toggle on={settings.notifs.storyReplays} onChange={() => updateNotifs("storyReplays")} />} />
+      </Section>
+
+      <Section title="Playback">
+        <Row icon={<Play className="size-4" />} label="Autoplay" right={<Toggle on={settings.playback.autoplay} onChange={() => updatePlayback("autoplay")} />} />
+        <Row icon={<Wifi className="size-4" />} label="Wifi only (mobile)" right={<Toggle on={settings.playback.wifiOnly} onChange={() => updatePlayback("wifiOnly")} />} />
+      </Section>
+
       <Section title="Privacy">
         <Row icon={<Bell className="size-4" />} label="Online activity"
-          right={<Toggle on={online} onChange={setO} />} />
+          right={<Toggle on={settings.onlineActivity} onChange={(v) => updateSettings({ onlineActivity: v })} />} />
       </Section>
 
       <Section title={`Blocked (${blocks.size})`}>

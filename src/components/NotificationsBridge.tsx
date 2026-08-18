@@ -6,6 +6,8 @@ import { db, VOICE_ROOT } from "@/lib/firebase";
 import { shouldRemindStreakBreak } from "@/lib/streak";
 import { pushNotif } from "@/lib/notifications-store";
 import { sendEmailNotify } from "@/lib/email-notify";
+import { listenNotifs } from "@/lib/notifications-store";
+import { DEFAULT_SETTINGS, listenSettings } from "@/lib/settings";
 import {
   markBroadcastNotified,
   maybeNotifyStreakBreak,
@@ -23,6 +25,7 @@ import {
 export function NotificationsBridge() {
   const { user } = useAuth();
   const askedRef = useRef(false);
+  const latestNotifRef = useRef<string | null>(null);
 
   // Request permission on the first user gesture (browsers require it).
   useEffect(() => {
@@ -62,6 +65,28 @@ export function NotificationsBridge() {
         }
       }
     });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    let preferences = DEFAULT_SETTINGS.notifs;
+    const offSettings = listenSettings(user.uid, (settings) => { preferences = settings.notifs; });
+    const offNotifs = listenNotifs(user.uid, (items) => {
+      const latest = items[0];
+      if (!latest) return;
+      if (latestNotifRef.current === null) { latestNotifRef.current = latest.id; return; }
+      if (latestNotifRef.current === latest.id) return;
+      latestNotifRef.current = latest.id;
+      const enabled = latest.kind === "dm-share" ? preferences.dmShares
+        : latest.kind === "story-react" ? preferences.storyReactions
+        : latest.kind === "story-replay" ? preferences.storyReplays
+        : latest.kind === "like" ? preferences.likes
+        : latest.kind === "comment" ? preferences.comments
+        : latest.kind === "follow" ? preferences.follows
+        : true;
+      if (enabled) showNotification(latest.fromName || "Heartable", latest.text, `notif-${latest.id}`);
+    });
+    return () => { offSettings(); offNotifs(); };
   }, [user]);
 
   // Streak → daily nudge

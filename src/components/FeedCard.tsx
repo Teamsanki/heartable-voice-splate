@@ -260,6 +260,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
       {shareOpen && (
         <ShareSheet
           postId={item.id}
+          ownerUid={item.uid}
           preview={{
             name: item.name,
             text: item.text,

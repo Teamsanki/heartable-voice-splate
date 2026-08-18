@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MoreHorizontal, Flag, UserX, Trash2, Settings2 } from "lucide-react";
+import { MoreHorizontal, Flag, UserX, Trash2, Settings2, BarChart3 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { blockUser } from "@/lib/blocks";
 import { submitReport } from "@/lib/reports";
@@ -8,6 +8,7 @@ import { updatePostSettings } from "@/lib/posts";
 import { onValue, ref } from "firebase/database";
 import { db } from "@/lib/firebase";
 
+import { PostAnalytics } from "./PostAnalytics";
 export function PostMenu({
   postId,
   authorUid,
@@ -20,6 +21,7 @@ export function PostMenu({
   const { user, profile } = useAuth();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [s, setS] = useState({ hidePlays: false, hideLikes: false, commentsOff: false, hideShares: false });
 
   useEffect(() => {
@@ -80,6 +82,7 @@ export function PostMenu({
             {mine ? (
               <>
                 <MenuItem icon={<Settings2 className="size-4" />} label="Post settings" onClick={() => { setSettingsOpen(true); setOpen(false); }} />
+                <MenuItem icon={<BarChart3 className="size-4" />} label="Analytics" onClick={() => { setAnalyticsOpen(true); setOpen(false); }} />
                 <MenuItem icon={<Trash2 className="size-4" />} label="Delete" onClick={onDelete} danger />
               </>
             ) : (
@@ -90,6 +93,14 @@ export function PostMenu({
             )}
           </div>
         </>
+      )}
+      {analyticsOpen && (
+        <div className="fixed inset-0 z-[70] bg-foreground/50 grid place-items-center p-4" onClick={() => setAnalyticsOpen(false)}>
+          <div className="w-full max-w-sm bg-card text-card-foreground rounded-2xl p-5" onClick={(e) => e.stopPropagation()}>
+            <PostAnalytics postId={postId} />
+            <button onClick={() => setAnalyticsOpen(false)} className="w-full py-2.5 rounded-full bg-sunset-900 text-sunset-50 text-sm font-semibold mt-4">Close</button>
+          </div>
+        </div>
       )}
       {settingsOpen && (
         <div className="fixed inset-0 z-[70] bg-foreground/50 grid place-items-center p-4" onClick={() => setSettingsOpen(false)}>

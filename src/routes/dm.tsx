@@ -29,10 +29,9 @@ function DMList() {
 
   useEffect(() => {
     if (!user) return;
-    const unsub = listenFriends(user.uid, async (ids) => {
-      const list = await Promise.all(ids.map(async (uid) => {
-        const ps = await get(ref(db, `${VOICE_ROOT}/${uid}/profile`));
-        const p = ps.val() || {};
+    const unsub = listenFriends(user.uid, async (people) => {
+      const list = await Promise.all(people.map(async (person) => {
+        const uid = person.uid;
         const tid = [user.uid, uid].sort().join("_");
         const lastSnap = await get(ref(db, `dm/${tid}/messages`));
         let lastMsgAt = 0; let lastMsg = "";
@@ -43,32 +42,17 @@ function DMList() {
             lastMsg = v.kind === "text" ? String(v.text || "") : v.kind === "post" ? "📮 Shared a post" : "🎙️ Voice note";
           }
         });
-        return { uid, name: p.name || "Friend", photo: p.photo || null, email: p.email || null, lastMsg, lastMsgAt };
+        return { ...person, lastMsg, lastMsgAt };
       }));
       setFriends(list.sort((a, b) => (b.lastMsgAt || 0) - (a.lastMsgAt || 0)));
     });
     return () => unsub();
   }, [user]);
 
-  // Load all profiles so a user can start a conversation directly.
+  // Only mutual followers can start a private conversation.
   useEffect(() => {
     if (!user || !showAdd) return;
-    const unsub = onValue(ref(db, VOICE_ROOT), (snap) => {
-      const out: Person[] = [];
-      snap.forEach((u) => {
-        if (u.key === user.uid) return;
-        const p = u.child("profile");
-        if (p.exists()) {
-          out.push({
-            uid: u.key!,
-            name: p.child("name").val() || "Friend",
-            photo: p.child("photo").val() || null,
-            email: p.child("email").val() || null,
-          });
-        }
-      });
-      setAllUsers(out);
-    });
+    const unsub = listenFriends(user.uid, setAllUsers);
     return () => unsub();
   }, [user, showAdd]);
 
@@ -108,7 +92,7 @@ function DMList() {
           <div className="text-center py-12 px-6">
             <MessageCircle className="size-10 mx-auto opacity-30" />
             <p className="text-sm font-semibold mt-3">No conversations yet</p>
-            <p className="text-xs opacity-60 mt-1">Tap the <b>+</b> button to find someone and start chatting.</p>
+            <p className="text-xs opacity-60 mt-1">Follow each other, then tap <b>+</b> to start a private chat.</p>
           </div>
         )}
         {filteredFriends.map((p) => <FriendRow key={p.uid} p={p} />)}
@@ -136,7 +120,7 @@ function FriendRow({ p }: { p: Person }) {
     <Link
       to="/dm/$uid"
       params={{ uid: p.uid }}
-      className="flex items-center gap-3 bg-card rounded-2xl p-3 ring-1 ring-foreground/5 active:scale-[0.99] transition"
+              className="flex items-center gap-3 bg-card rounded-2xl p-3 ring-1 ring-foreground/5 active:scale-[0.99] transition"
     >
       <div className="relative">
         <div className="size-12 rounded-full bg-sunset-200 grid place-items-center font-semibold overflow-hidden">

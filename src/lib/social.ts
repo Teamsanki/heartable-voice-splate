@@ -167,7 +167,7 @@ export async function areFriends(a: string, b: string) {
   return s1.exists() && s2.exists();
 }
 
-export function listenFriends(myUid: string, cb: (friendUids: string[]) => void) {
+export function listenFriends(myUid: string, cb: (friends: { uid: string; name: string; photo?: string | null; email?: string | null }[]) => void) {
   return onValue(ref(db, `follows/${myUid}`), async (snap) => {
     const ids: string[] = [];
     snap.forEach((c) => { ids.push(c.key!); });
@@ -175,7 +175,13 @@ export function listenFriends(myUid: string, cb: (friendUids: string[]) => void)
     const checks = await Promise.all(
       ids.map((id) => get(ref(db, `follows/${id}/${myUid}`))),
     );
-    cb(ids.filter((_, i) => checks[i].exists()));
+    const mutualIds = ids.filter((_, i) => checks[i].exists());
+    const profiles = await Promise.all(mutualIds.map(async (uid) => {
+      const profileSnap = await get(ref(db, `${VOICE_ROOT}/${uid}/profile`));
+      const p = profileSnap.val() || {};
+      return { uid, name: p.name || "Friend", photo: p.photo || null, email: p.email || null };
+    }));
+    cb(profiles);
   });
 }
 

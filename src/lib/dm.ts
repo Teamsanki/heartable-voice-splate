@@ -1,12 +1,14 @@
-import { get, onValue, push, ref, remove, serverTimestamp, set, update } from "firebase/database";
+import { get, onValue, push, ref, remove, set, update } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
 import { cleanPreview, type PostPreview } from "./share";
+import { areFriends } from "./social";
+import { pushNotif } from "./notifications-store";
 
 export function threadId(a: string, b: string) {
   return [a, b].sort().join("_");
 }
 
-export type DMKind = "voice" | "text" | "post";
+export type DMKind = "voice" | "text" | "post" | "story-reaction" | "story-reply";
 
 export type DMMessage = {
   id: string;
@@ -20,6 +22,8 @@ export type DMMessage = {
   durationSec?: number;
   postId?: string;
   postPreview?: PostPreview | null;
+  storyId?: string;
+  emoji?: string;
   listened?: boolean;
   read?: boolean;
   createdAt: number;
@@ -29,6 +33,7 @@ export type DMMessage = {
 /* ---------- send ---------- */
 
 export async function sendTextDM(fromUid: string, fromName: string, toUid: string, text: string) {
+  if (!(await areFriends(fromUid, toUid))) throw new Error("You can only message mutual followers.");
   const t = text.trim().slice(0, 1000);
   if (!t) return;
   const node = push(ref(db, `dm/${threadId(fromUid, toUid)}/messages`));
@@ -36,7 +41,8 @@ export async function sendTextDM(fromUid: string, fromName: string, toUid: strin
     uid: fromUid, name: fromName, to: toUid, kind: "text",
     text: t, read: false, createdAt: Date.now(),
   });
-  return node.key!;
+  await updateThreadSummary(fromUid, toUid, fromName, t);
+  return node.key || "";
 }
 
 export async function sendPostDM(
@@ -47,6 +53,7 @@ export async function sendPostDM(
   preview: DMMessage["postPreview"],
   note?: string,
 ) {
+  if (!(await areFriends(fromUid, toUid))) throw new Error("You can only message mutual followers.");
   const node = push(ref(db, `dm/${threadId(fromUid, toUid)}/messages`));
   await set(node, {
     uid: fromUid, name: fromName, to: toUid, kind: "post",
@@ -54,7 +61,44 @@ export async function sendPostDM(
     text: (note || "").slice(0, 200),
     read: false, createdAt: Date.now(),
   });
-  return node.key!;
+  await updateThreadSummary(fromUid, toUid, fromName, "Shared a post");
+  await pushNotif(toUid, { kind: "dm-share", fromUid, fromName, postId, peerUid: fromUid, text: "sent you a post" });
+  return node.key || "";
+}
+
+async function updateThreadSummary(fromUid: string, toUid: string, fromName: string, text: string) {
+  await update(ref(db, `dm/${threadId(fromUid, toUid)}`), {
+    participants: { [fromUid]: true, [toUid]: true },
+    lastMessage: { fromUid, fromName, text, createdAt: Date.now() },
+  });
+}
+
+export async function sendStoryReactionDM(opts: {
+  fromUid: string; fromName: string; toUid: string; storyId: string; emoji?: string; text?: string;
+}) {
+  if (!(await areFriends(opts.fromUid, opts.toUid))) {
+    throw new Error("Follow each other to reply to this story.");
+  }
+  const kind: DMKind = opts.emoji ? "story-reaction" : "story-reply";
+  const node = push(ref(db, `dm/${threadId(opts.fromUid, opts.toUid)}/messages`));
+  await set(node, {
+    uid: opts.fromUid,
+    name: opts.fromName,
+    to: opts.toUid,
+    kind,
+    storyId: opts.storyId,
+    emoji: opts.emoji || null,
+    text: (opts.text || "").slice(0, 500),
+    read: false,
+    createdAt: Date.now(),
+  });
+  const summary = opts.emoji ? `Reacted ${opts.emoji} to your story` : "Replied to your story";
+  await updateThreadSummary(opts.fromUid, opts.toUid, opts.fromName, summary);
+  await pushNotif(opts.toUid, {
+    kind: "story-react", fromUid: opts.fromUid, fromName: opts.fromName,
+    peerUid: opts.fromUid, storyId: opts.storyId, text: summary,
+  });
+  return node.key || "";
 }
 
 /* ---------- read receipts ---------- */

@@ -74,7 +74,8 @@ function useDMUnread(uid?: string) {
   useEffect(() => {
     if (!uid) return;
     const perThread: Record<string, () => void> = {};
-    const off = listenFriends(uid, (ids) => {
+    const off = listenFriends(uid, (friends) => {
+      const ids = friends.map((friend) => friend.uid);
       for (const id of Object.keys(perThread)) {
         if (!ids.includes(id)) { perThread[id](); delete perThread[id]; }
       }

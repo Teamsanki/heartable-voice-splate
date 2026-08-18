@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { get, ref } from "firebase/database";
-import { X, Search, Link2, PlusCircle, Send, Check, MessageCircle } from "lucide-react";
+import { X, Search, Link2, PlusCircle, Send, Check, MessageCircle, SendHorizontal } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { recordShare } from "@/lib/social";
+import { listenFriends, recordShare } from "@/lib/social";
 import { sendPostDM } from "@/lib/dm";
 import {
   sharePostToStory, bumpShareStat, listenShareStats,
@@ -24,10 +22,12 @@ const COVERS: { id: string; label: string; bgCss: string; fgColor: string }[] = 
 
 export function ShareSheet({
   postId,
+  ownerUid,
   preview,
   onClose,
 }: {
   postId: string;
+  ownerUid: string;
   preview: PostPreview;
   onClose: () => void;
 }) {
@@ -59,8 +59,8 @@ export function ShareSheet({
 
   useEffect(() => {
     if (!user) return;
-    return listenShareStats(user.uid, postId, setStats);
-  }, [user, postId]);
+    return listenShareStats(ownerUid, postId, setStats);
+  }, [user, ownerUid, postId]);
 
   useEffect(() => {
     if (!status) return;
@@ -72,22 +72,12 @@ export function ShareSheet({
     if (!user) { setLoadingPeople(false); return; }
     let cancelled = false;
     setLoadingPeople(true);
-    get(ref(db, VOICE_ROOT))
-      .then((snap) => {
-        if (cancelled) return;
-        const people: Friend[] = [];
-        snap.forEach((child) => {
-          if (child.key === user.uid) return;
-          const p = child.child("profile").val() || {};
-          if (p.name) people.push({ uid: child.key || "", name: p.name, photo: p.photo || null });
-        });
-        setFriends(people.sort((a, b) => a.name.localeCompare(b.name)));
-      })
-      .catch((error) => {
-        if (!cancelled) fail(error?.message || "Could not load people.");
-      })
-      .finally(() => { if (!cancelled) setLoadingPeople(false); });
-    return () => { cancelled = true; };
+    const unsub = listenFriends(user.uid, (people) => {
+      if (cancelled) return;
+      setFriends(people.sort((a, b) => a.name.localeCompare(b.name)));
+      setLoadingPeople(false);
+    });
+    return () => { cancelled = true; unsub(); };
   }, [user]);
 
   const url = typeof location !== "undefined" ? `${location.origin}/p/${postId}` : "";
@@ -104,7 +94,7 @@ export function ShareSheet({
     try {
       await sendPostDM(user.uid, profile.name, f.uid, postId, styledPreview, note);
       try { await recordShare(postId, user.uid); } catch { /* count only */ }
-      try { await bumpShareStat(user.uid, postId, "dm"); } catch { /* stats only */ }
+      try { await bumpShareStat(ownerUid, postId, "dm"); } catch { /* stats only */ }
       setSent((s) => new Set(s).add(f.uid));
       ok(`Sent to ${f.name}`);
     } catch (e: any) {
@@ -118,9 +108,9 @@ export function ShareSheet({
     if (storyDone) return;
     setBusy(true);
     try {
-      await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, preview: styledPreview });
+      await sharePostToStory({ uid: user.uid, name: profile.name, photo: profile.photo, postId, postOwnerUid: ownerUid, preview: styledPreview });
       try { await recordShare(postId, user.uid); } catch { /* count only */ }
-      try { await bumpShareStat(user.uid, postId, "story"); } catch { /* stats only */ }
+      try { await bumpShareStat(ownerUid, postId, "story"); } catch { /* stats only */ }
       setStoryDone(true);
       ok("Added to your story — visible for 24h");
     } catch (e: any) {
@@ -147,7 +137,7 @@ export function ShareSheet({
       }
       ok("Link copied to clipboard");
       try { await recordShare(postId, user?.uid); } catch { /* count only */ }
-      if (user) { try { await bumpShareStat(user.uid, postId, "link"); } catch { /* stats only */ } }
+      if (user) { try { await bumpShareStat(ownerUid, postId, "link"); } catch { /* stats only */ } }
     } catch {
       fail("Could not copy the link. Please try again.");
     }
@@ -160,7 +150,7 @@ export function ShareSheet({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 flex items-center justify-between border-b border-foreground/10">
-          <h2 className="font-serif italic text-2xl">Share</h2>
+          <h2 className="font-serif italic text-2xl flex items-center gap-2"><SendHorizontal className="size-5" /> Share</h2>
           <button onClick={onClose} aria-label="Close" className="size-9 rounded-full bg-foreground/5 grid place-items-center">
             <X className="size-4" />
           </button>
@@ -264,7 +254,7 @@ export function ShareSheet({
           {!loadingPeople && list.length === 0 && (
             <div className="text-center py-8 space-y-2">
               <p className="text-xs opacity-50">
-                No people found yet.
+                 Follow each other to share privately.
               </p>
               <button
                 onClick={() => { onClose(); navigate({ to: "/dm" }); }}

@@ -65,14 +65,25 @@
     "shareStats": {
       "$uid": {
         ".read": "auth != null",
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null"
+      }
+    },
+
+    "shareEvents": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$postId": {
+          "$eventId": {
+            ".write": "auth != null && newData.child('createdAt').isNumber() && (newData.child('channel').val() === 'dm' || newData.child('channel').val() === 'story' || newData.child('channel').val() === 'link' || newData.child('channel').val() === 'replay')"
+          }
+        }
       }
     },
 
     "dm": {
       "$thread": {
-        ".read": "auth != null && $thread.contains(auth.uid)",
-        ".write": "auth != null && $thread.contains(auth.uid)"
+        ".read": "auth != null && data.child('participants').child(auth.uid).val() === true",
+        ".write": "auth != null && $thread.contains(auth.uid) && ((!data.exists() && newData.child('participants').child(auth.uid).val() === true) || data.child('participants').child(auth.uid).val() === true)"
       }
     },
 

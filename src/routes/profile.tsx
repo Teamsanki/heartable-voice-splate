@@ -13,7 +13,7 @@ import { listenUserStats, listenUserPosts, type UserStats } from "@/lib/social";
 import { updateProfilePhoto } from "@/lib/social";
 import { uploadImage } from "@/lib/voice-api";
 
-import { Settings as SettingsIcon, Pencil, Camera, Bookmark, Search as SearchIcon } from "lucide-react";
+import { Settings as SettingsIcon, Pencil, Camera, Bookmark, Search as SearchIcon, BarChart3 } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Profile — Heartable" }] }),
@@ -100,6 +100,9 @@ function ProfilePage() {
           <Link to="/settings" aria-label="Settings"
             className="size-9 rounded-full bg-sunset-100 grid place-items-center">
             <SettingsIcon className="size-4" />
+          </Link>
+          <Link to="/analytics" aria-label="Creator analytics" className="size-9 rounded-full bg-sunset-100 grid place-items-center">
+            <BarChart3 className="size-4" />
           </Link>
         </div>
         <div className="flex items-center gap-4 mt-3">

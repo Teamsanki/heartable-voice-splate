@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { limitToLast, onValue, orderByChild, query, ref } from "firebase/database";
-import { Heart, MessageCircle, Share2, Play, Pause, ChevronLeft } from "lucide-react";
+import { Heart, MessageCircle, SendHorizontal, Play, Pause, ChevronLeft } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { listenLiked, recordShare, toggleLike } from "@/lib/social";
+import { listenLiked, toggleLike } from "@/lib/social";
+import { ShareSheet } from "@/components/ShareSheet";
+import { DEFAULT_SETTINGS, listenSettings } from "@/lib/settings";
 import { FollowButton } from "@/components/FollowButton";
 import { CommentSheet } from "@/components/CommentSheet";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -108,11 +110,21 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
   const [progress, setProgress] = useState(0);
   const [liked, setLiked] = useState(false);
   const [commentOpen, setCommentOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [autoplay, setAutoplay] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     return listenLiked(item.id, user.uid, setLiked);
   }, [user, item.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    return listenSettings(user.uid, (settings) => {
+      const connection = navigator as Navigator & { connection?: { type?: string } };
+      setAutoplay(settings.playback.autoplay && (!settings.playback.wifiOnly || connection.connection?.type === "wifi"));
+    });
+  }, [user]);
 
   // Auto play / pause based on visibility
   useEffect(() => {
@@ -123,7 +135,7 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
         for (const e of entries) {
           const a = audioRef.current;
           if (!a) continue;
-          if (e.intersectionRatio > 0.7) {
+          if (e.intersectionRatio > 0.7 && autoplay) {
             if (user) bumpAffinity(user.uid, item.category, 1).catch(() => {});
             a.currentTime = 0;
             a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
@@ -137,7 +149,7 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [user, item.category]);
+  }, [user, item.category, autoplay]);
 
   const onTogglePlay = () => {
     const a = audioRef.current;
@@ -150,19 +162,6 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
     if (!user) return;
     await toggleLike(item.id, user.uid);
     bumpAffinity(user.uid, item.category, 3).catch(() => {});
-  };
-
-  const onShare = async () => {
-    const url = `${location.origin}/p/${item.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${item.name} on Heartable`, text: item.caption || "Sun ye awaaz", url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        alert("Link copy!");
-      }
-      await recordShare(item.id, user?.uid);
-    } catch {}
   };
 
   // Gradient seed from id so each card looks distinct
@@ -253,8 +252,8 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
         />
         <ActionBtn
           label={String(item.shareCount || 0)}
-          icon={<Share2 className="size-7" />}
-          onClick={onShare}
+          icon={<SendHorizontal className="size-7" />}
+          onClick={() => setShareOpen(true)}
         />
       </div>
 
@@ -269,6 +268,7 @@ function TrendingCard({ item, index }: { item: Item; index: number }) {
       {commentOpen && (
         <CommentSheet postId={item.id} authorUid={item.uid} onClose={() => setCommentOpen(false)} />
       )}
+      {shareOpen && <ShareSheet postId={item.id} ownerUid={item.uid} preview={{ name: item.name, caption: item.caption, url: item.url, filter: item.filter, durationSec: item.durationSec }} onClose={() => setShareOpen(false)} />}
     </section>
   );
 }

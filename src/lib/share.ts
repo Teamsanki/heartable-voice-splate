@@ -35,6 +35,16 @@ export async function bumpShareStat(uid: string, postId: string, channel: ShareC
     ref(db, `shareStats/${uid}/${postId}/${channel}`),
     (n: any) => (n || 0) + 1,
   );
+  const event = push(ref(db, `shareEvents/${uid}/${postId}`));
+  await set(event, { channel, createdAt: Date.now() });
+}
+
+export async function recordReplay(ownerUid: string, postId: string | undefined, storyId: string, viewerUid: string) {
+  if (postId) {
+    await runTransaction(ref(db, `shareStats/${ownerUid}/${postId}/replays`), (n: any) => (n || 0) + 1);
+    const event = push(ref(db, `shareEvents/${ownerUid}/${postId}`));
+    await set(event, { channel: "replay", storyId, viewerUid, createdAt: Date.now() });
+  }
 }
 
 /** Live counts of how a post was shared + how often the shared story was replayed. */
@@ -69,6 +79,7 @@ export async function sharePostToStory(opts: {
   name: string;
   photo?: string | null;
   postId: string;
+  postOwnerUid: string;
   preview: PostPreview;
 }) {
   const node = push(ref(db, `${VOICE_ROOT}/${opts.uid}/stories`));
@@ -78,6 +89,7 @@ export async function sharePostToStory(opts: {
     photo: opts.photo || null,
     kind: "post",
     postId: opts.postId,
+    postOwnerUid: opts.postOwnerUid,
     postPreview: cleanPreview(opts.preview),
     url: opts.preview.url || "",
     filter: opts.preview.filter || "none",
