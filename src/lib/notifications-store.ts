@@ -1,7 +1,7 @@
 import { onValue, push, ref, set, update, get } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
 
-export type NotifKind = "like" | "comment" | "follow" | "story-react" | "story-replay" | "dm-share" | "admin" | "warning";
+export type NotifKind = "like" | "comment" | "follow" | "story-react" | "story-replay" | "dm-share" | "dm-message" | "admin" | "warning";
 export type Notif = {
   id: string;
   kind: NotifKind;
