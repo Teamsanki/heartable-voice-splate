@@ -2,9 +2,12 @@ import { onValue, ref, set, update } from "firebase/database";
 import { db, VOICE_ROOT } from "./firebase";
 
 export type Theme = "dark" | "light" | "system";
+export type NotificationSchedule = { enabled: boolean; start: string; end: string };
+export type StoryViewerPrivacy = "full" | "recent" | "totals";
 export type UserSettings = {
   theme: Theme;
   onlineActivity: boolean;
+  timezone: string;
   notifs: {
     likes: boolean;
     comments: boolean;
@@ -18,11 +21,19 @@ export type UserSettings = {
     autoplay: boolean;
     wifiOnly: boolean;
   };
+  quietHours: NotificationSchedule;
+  notificationWindows: {
+    dms: NotificationSchedule;
+    replays: NotificationSchedule;
+    storyReactions: NotificationSchedule;
+  };
+  storyViewerPrivacy: StoryViewerPrivacy;
 };
 
 export const DEFAULT_SETTINGS: UserSettings = {
   theme: "light",
   onlineActivity: true,
+  timezone: "Asia/Kolkata",
   notifs: {
     likes: true,
     comments: true,
@@ -33,6 +44,13 @@ export const DEFAULT_SETTINGS: UserSettings = {
     storyReplays: true,
   },
   playback: { autoplay: true, wifiOnly: false },
+  quietHours: { enabled: false, start: "22:00", end: "08:00" },
+  notificationWindows: {
+    dms: { enabled: false, start: "08:00", end: "22:00" },
+    replays: { enabled: false, start: "09:00", end: "21:00" },
+    storyReactions: { enabled: false, start: "08:00", end: "22:00" },
+  },
+  storyViewerPrivacy: "full",
 };
 
 export function listenSettings(uid: string, cb: (s: UserSettings) => void) {
@@ -43,8 +61,16 @@ export function listenSettings(uid: string, cb: (s: UserSettings) => void) {
       ...v,
       theme: (v.theme as Theme) || DEFAULT_SETTINGS.theme,
       onlineActivity: v.onlineActivity ?? DEFAULT_SETTINGS.onlineActivity,
+      timezone: v.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_SETTINGS.timezone,
       notifs: { ...DEFAULT_SETTINGS.notifs, ...(v.notifs || {}) },
       playback: { ...DEFAULT_SETTINGS.playback, ...(v.playback || {}) },
+      quietHours: { ...DEFAULT_SETTINGS.quietHours, ...(v.quietHours || {}) },
+      notificationWindows: {
+        dms: { ...DEFAULT_SETTINGS.notificationWindows.dms, ...(v.notificationWindows?.dms || {}) },
+        replays: { ...DEFAULT_SETTINGS.notificationWindows.replays, ...(v.notificationWindows?.replays || {}) },
+        storyReactions: { ...DEFAULT_SETTINGS.notificationWindows.storyReactions, ...(v.notificationWindows?.storyReactions || {}) },
+      },
+      storyViewerPrivacy: v.storyViewerPrivacy || DEFAULT_SETTINGS.storyViewerPrivacy,
     });
   });
 }

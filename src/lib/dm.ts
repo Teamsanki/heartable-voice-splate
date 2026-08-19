@@ -42,6 +42,7 @@ export async function sendTextDM(fromUid: string, fromName: string, toUid: strin
     text: t, read: false, createdAt: Date.now(),
   });
   await updateThreadSummary(fromUid, toUid, fromName, t);
+  await pushNotif(toUid, { kind: "dm-message", fromUid, fromName, peerUid: fromUid, text: t.slice(0, 100) });
   return node.key || "";
 }
 
@@ -67,9 +68,14 @@ export async function sendPostDM(
 }
 
 async function updateThreadSummary(fromUid: string, toUid: string, fromName: string, text: string) {
-  await update(ref(db, `dm/${threadId(fromUid, toUid)}`), {
-    participants: { [fromUid]: true, [toUid]: true },
-    lastMessage: { fromUid, fromName, text, createdAt: Date.now() },
+  const id = threadId(fromUid, toUid);
+  const createdAt = Date.now();
+  await update(ref(db), {
+    [`dm/${id}/participants/${fromUid}`]: true,
+    [`dm/${id}/participants/${toUid}`]: true,
+    [`dm/${id}/lastMessage`]: { fromUid, fromName, text, createdAt },
+    [`inboxes/${fromUid}/${toUid}`]: { threadId: id, peerUid: toUid, text, createdAt },
+    [`inboxes/${toUid}/${fromUid}`]: { threadId: id, peerUid: fromUid, text, createdAt },
   });
 }
 
