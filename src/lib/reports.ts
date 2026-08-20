@@ -43,7 +43,7 @@ export async function setReportStatus(id: string, status: Report["status"]) {
 export function listenMyReports(uid: string, cb: (reports: Report[]) => void) {
   return onValue(ref(db, `userReports/${uid}`), (snap) => {
     const reports: Report[] = [];
-    snap.forEach((child) => reports.push({ id: child.key as string, ...child.val() }));
+    snap.forEach((child) => { reports.push({ id: child.key as string, ...child.val() }); });
     cb(reports.sort((a, b) => b.createdAt - a.createdAt));
   });
 }
