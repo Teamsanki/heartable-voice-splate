@@ -59,6 +59,7 @@ function StoryPage() {
   const [voiceReply, setVoiceReply] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [allowAutoplay, setAllowAutoplay] = useState(true);
+  const [viewerPrivacy, setViewerPrivacy] = useState<"full" | "recent" | "totals">("full");
 
   // Parse queue "id1:uid1,id2:uid2"
   const queue: { id: string; uid: string }[] = (q || "").split(",").filter(Boolean).map((s: string) => {
@@ -91,6 +92,7 @@ function StoryPage() {
     return listenSettings(user.uid, (settings) => {
       const connection = navigator as Navigator & { connection?: { type?: string } };
       setAllowAutoplay(settings.playback.autoplay && (!settings.playback.wifiOnly || connection.connection?.type === "wifi"));
+      setViewerPrivacy(settings.storyViewerPrivacy);
     });
   }, [user]);
 
@@ -310,7 +312,8 @@ function StoryPage() {
       {user?.uid === uid ? (
         <div className="pb-4">
           <button onClick={() => setShowViewers((value) => !value)} className="mx-auto flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm"><Eye className="size-4" /> {Object.keys(story.viewers || {}).length} viewers · {Object.values(story.viewers || {}).reduce((sum, viewer) => sum + viewer.count, 0)} views</button>
-          {showViewers && <div className="mt-2 max-h-40 overflow-y-auto rounded-xl bg-black/20 p-2 space-y-1">{Object.entries(story.viewers || {}).map(([viewerUid, viewer]) => <div key={viewerUid} className="flex items-center justify-between text-xs p-2"><span>{viewer.name}</span><span>{viewer.count > 1 ? `Rewatched ${viewer.count - 1}×` : "Viewed"}</span></div>)}</div>}
+          {showViewers && viewerPrivacy !== "totals" && <div className="mt-2 max-h-40 overflow-y-auto rounded-xl bg-black/20 p-2 space-y-1">{Object.entries(story.viewers || {}).sort(([, a], [, b]) => b.lastSeenAt - a.lastSeenAt).slice(0, viewerPrivacy === "recent" ? 5 : undefined).map(([viewerUid, viewer]) => <div key={viewerUid} className="flex items-center justify-between text-xs p-2"><span>{viewer.name}</span><span>{viewer.count > 1 ? `Rewatched ${viewer.count - 1}×` : "Viewed"}</span></div>)}</div>}
+          {showViewers && viewerPrivacy === "totals" && <p className="mt-2 text-center text-xs opacity-70">Viewer names are hidden by your privacy setting.</p>}
         </div>
       ) : user && profile ? (
         <div className="pb-4 flex gap-2">

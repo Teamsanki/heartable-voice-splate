@@ -36,6 +36,7 @@ function DMThread() {
   const [clearedAt, setClearedAt] = useState(0);
   const typingTimer = useRef<any>(null);
   const [gate, setGate] = useState<"loading" | "ok" | "blocked" | "not-friends">("loading");
+  const [gateAttempt, setGateAttempt] = useState(0);
 
   const threadId = user ? [user.uid, peerUid].sort().join("_") : null;
 
@@ -55,7 +56,7 @@ function DMThread() {
       if (!friends) { setGate("not-friends"); return; }
       setGate("ok");
     })().catch(() => setGate("not-friends"));
-  }, [user, peerUid]);
+  }, [user, peerUid, gateAttempt]);
 
   useEffect(() => {
     if (!user) return;
@@ -156,7 +157,7 @@ function DMThread() {
           </p>
           <div className="mt-5 flex flex-col gap-2">
             <button
-              onClick={() => setGate("loading")}
+              onClick={() => { setGate("loading"); setGateAttempt((attempt) => attempt + 1); }}
               className="px-4 py-2.5 rounded-full bg-sunset-600 text-white text-sm font-semibold"
             >
               Retry
