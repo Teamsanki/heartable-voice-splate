@@ -7,7 +7,9 @@ import { shouldRemindStreakBreak } from "@/lib/streak";
 import { pushNotif } from "@/lib/notifications-store";
 import { sendEmailNotify } from "@/lib/email-notify";
 import { listenNotifs } from "@/lib/notifications-store";
-import { DEFAULT_SETTINGS, listenSettings } from "@/lib/settings";
+import { DEFAULT_SETTINGS, listenSettings, type UserSettings } from "@/lib/settings";
+import { notificationEnabled } from "@/lib/notification-schedule";
+import { listenForegroundPush } from "@/lib/push-notifications";
 import {
   markBroadcastNotified,
   maybeNotifyStreakBreak,
@@ -69,25 +71,24 @@ export function NotificationsBridge() {
 
   useEffect(() => {
     if (!user) return;
-    let preferences = DEFAULT_SETTINGS.notifs;
-    const offSettings = listenSettings(user.uid, (settings) => { preferences = settings.notifs; });
+    let preferences: UserSettings = DEFAULT_SETTINGS;
+    const offSettings = listenSettings(user.uid, (settings) => { preferences = settings; });
     const offNotifs = listenNotifs(user.uid, (items) => {
       const latest = items[0];
       if (!latest) return;
       if (latestNotifRef.current === null) { latestNotifRef.current = latest.id; return; }
       if (latestNotifRef.current === latest.id) return;
       latestNotifRef.current = latest.id;
-      const enabled = latest.kind === "dm-share" ? preferences.dmShares
-        : latest.kind === "story-react" ? preferences.storyReactions
-        : latest.kind === "story-replay" ? preferences.storyReplays
-        : latest.kind === "like" ? preferences.likes
-        : latest.kind === "comment" ? preferences.comments
-        : latest.kind === "follow" ? preferences.follows
-        : true;
-      if (enabled) showNotification(latest.fromName || "Heartable", latest.text, `notif-${latest.id}`);
+      if (notificationEnabled(latest.kind, preferences)) showNotification(latest.fromName || "Heartable", latest.text, `notif-${latest.id}`);
     });
     return () => { offSettings(); offNotifs(); };
   }, [user]);
+
+  useEffect(() => {
+    let off = () => {};
+    listenForegroundPush((title, body) => showNotification(title, body, "fcm-foreground")).then((unsubscribe) => { off = unsubscribe; });
+    return () => off();
+  }, []);
 
   // Streak → daily nudge
   useEffect(() => {

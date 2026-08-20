@@ -1,187 +1,91 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BetaBadge } from "@/components/BetaBadge";
 import { useEffect, useState } from "react";
-import { onValue, ref, get } from "firebase/database";
+import { get, onValue, ref } from "firebase/database";
 import { db, VOICE_ROOT } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { BottomNav } from "@/components/BottomNav";
 import { GuestLock } from "@/components/GuestLock";
 import { listenFriends } from "@/lib/social";
-import { listenPresence } from "@/lib/presence";
-import { Plus, Search, MessageCircle } from "lucide-react";
-import { MobileShell } from "@/components/MobileShell";
-import { UserBadges } from "@/components/UserBadges";
 import { listenThreadUnread } from "@/lib/dm";
+import { listenCircles, type Circle } from "@/lib/circles";
+import { BetaBadge } from "@/components/BetaBadge";
+import { MobileShell } from "@/components/MobileShell";
+import { CircleUserRound, MessageCircle, Plus, Search } from "lucide-react";
 
 export const Route = createFileRoute("/dm")({
-  head: () => ({ meta: [{ title: "Chats — Heartable" }] }),
+  head: () => ({ meta: [{ title: "Chats & Circles — Heartable" }, { name: "description", content: "Private chats and voice circles on Heartable." }, { property: "og:title", content: "Chats & Circles — Heartable" }, { property: "og:description", content: "Private chats and voice circles on Heartable." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: DMList,
 });
 
-type Person = { uid: string; name: string; photo?: string | null; email?: string | null; online?: boolean; lastMsg?: string; lastMsgAt?: number };
+type Person = { uid: string; name: string; photo?: string | null; email?: string | null; lastMsg?: string; lastMsgAt?: number; kinds?: string[] };
+type Filter = "all" | "unread" | "posts" | "stories";
 
 function DMList() {
   const { user, isGuest } = useAuth();
+  const [tab, setTab] = useState<"chats" | "circles">("chats");
   const [friends, setFriends] = useState<Person[]>([]);
-  const [allUsers, setAllUsers] = useState<Person[]>([]);
-  const [q, setQ] = useState("");
-  const [showAdd, setShowAdd] = useState(false);
+  const [circles, setCircles] = useState<Circle[]>([]);
+  const [unreads, setUnreads] = useState<Record<string, number>>({});
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
     if (!user) return;
-    const unsub = listenFriends(user.uid, async (people) => {
-      const list = await Promise.all(people.map(async (person) => {
-        const uid = person.uid;
-        const tid = [user.uid, uid].sort().join("_");
-        const lastSnap = await get(ref(db, `dm/${tid}/messages`));
-        let lastMsgAt = 0; let lastMsg = "";
-        lastSnap.forEach((m) => {
-          const v = m.val();
-          if ((v.createdAt || 0) > lastMsgAt) {
-            lastMsgAt = v.createdAt;
-            lastMsg = v.kind === "text" ? String(v.text || "") : v.kind === "post" ? "📮 Shared a post" : "🎙️ Voice note";
-          }
-        });
-        return { ...person, lastMsg, lastMsgAt };
+    return listenFriends(user.uid, async (people) => {
+      const rows = await Promise.all(people.map(async (person) => {
+        const summary = await get(ref(db, `inboxes/${user.uid}/${person.uid}`));
+        const value = summary.val() || {};
+        const messages = await get(ref(db, `dm/${[user.uid, person.uid].sort().join("_")}/messages`));
+        const kinds: string[] = [];
+        messages.forEach((message) => { const kind = String(message.child("kind").val() || "voice"); if (!kinds.includes(kind)) kinds.push(kind); });
+        return { ...person, lastMsg: value.text || "Tap to start the conversation", lastMsgAt: value.createdAt || 0, kinds };
       }));
-      setFriends(list.sort((a, b) => (b.lastMsgAt || 0) - (a.lastMsgAt || 0)));
+      setFriends(rows.sort((a, b) => Number(b.lastMsgAt || 0) - Number(a.lastMsgAt || 0)));
     });
-    return () => unsub();
   }, [user]);
 
-  // Only mutual followers can start a private conversation.
-  useEffect(() => {
-    if (!user || !showAdd) return;
-    const unsub = listenFriends(user.uid, setAllUsers);
-    return () => unsub();
-  }, [user, showAdd]);
-
-  if (isGuest) return <GuestLock feature="Messages" />;
-
-  const ql = q.trim().toLowerCase();
-  const filteredFriends = ql ? friends.filter((p) => p.name.toLowerCase().includes(ql)) : friends;
-
-  return (
-    <MobileShell className="p-5 gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.25em] opacity-60 inline-flex items-center gap-1.5">Heartable <BetaBadge /></p>
-          <h1 className="font-serif italic text-3xl">Chats</h1>
-        </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          aria-label="New chat"
-          className="size-11 rounded-full bg-gradient-to-br from-sunset-600 to-sunset-900 text-white grid place-items-center shadow-lg shadow-sunset-600/30 active:scale-95 transition"
-        >
-          <Plus className="size-5" />
-        </button>
-      </div>
-
-      <div className="relative">
-        <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search friends"
-          className="w-full pl-9 pr-4 py-2.5 rounded-full bg-card ring-1 ring-foreground/10 text-sm outline-none"
-        />
-      </div>
-
-      <div className="space-y-2 mt-1">
-        {filteredFriends.length === 0 && (
-          <div className="text-center py-12 px-6">
-            <MessageCircle className="size-10 mx-auto opacity-30" />
-            <p className="text-sm font-semibold mt-3">No conversations yet</p>
-            <p className="text-xs opacity-60 mt-1">Follow each other, then tap <b>+</b> to start a private chat.</p>
-          </div>
-        )}
-        {filteredFriends.map((p) => <FriendRow key={p.uid} p={p} />)}
-      </div>
-
-      {showAdd && (
-        <AddChatDrawer users={allUsers} onClose={() => setShowAdd(false)} />
-      )}
-
-      <BottomNav />
-    </MobileShell>
-  );
-}
-
-function FriendRow({ p }: { p: Person }) {
-  const { user } = useAuth();
-  const [online, setOnline] = useState(false);
-  const [unread, setUnread] = useState(0);
-  useEffect(() => listenPresence(p.uid, (pr) => setOnline(pr.online)), [p.uid]);
   useEffect(() => {
     if (!user) return;
-    return listenThreadUnread(user.uid, p.uid, setUnread);
-  }, [user, p.uid]);
-  return (
-    <Link
-      to="/dm/$uid"
-      params={{ uid: p.uid }}
-              className="flex items-center gap-3 bg-card rounded-2xl p-3 ring-1 ring-foreground/5 active:scale-[0.99] transition"
-    >
-      <div className="relative">
-        <div className="size-12 rounded-full bg-sunset-200 grid place-items-center font-semibold overflow-hidden">
-          {p.photo ? <img src={p.photo} className="w-full h-full object-cover" /> : p.name.slice(0, 1).toUpperCase()}
-        </div>
-        {online && <span className="absolute bottom-0 right-0 size-3 bg-emerald-500 rounded-full ring-2 ring-white" />}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold flex items-center gap-1 truncate">
-          {p.name}
-          <UserBadges uid={p.uid} email={p.email} size={11} />
-        </p>
-        <p className={`text-[11px] truncate ${unread ? "font-semibold opacity-90" : "opacity-50"}`}>
-          {p.lastMsg || (online ? "Online" : "Tap to start the conversation")}
-        </p>
-      </div>
-      {unread > 0 ? (
-        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center tabular-nums">
-          {unread > 99 ? "99+" : unread}
-        </span>
-      ) : (
-        <span className="text-sunset-600 text-lg">→</span>
-      )}
-    </Link>
-  );
+    return listenCircles(user.uid, setCircles);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const offs = friends.map((friend) => listenThreadUnread(user.uid, friend.uid, (count) => setUnreads((current) => ({ ...current, [friend.uid]: count }))));
+    return () => offs.forEach((off) => off());
+  }, [user, friends.map((friend) => friend.uid).join(",")]);
+
+  if (isGuest) return <GuestLock feature="Chats and Circles" />;
+  if (!user) return <div className="min-h-screen grid place-items-center">Sign in to open Chats.</div>;
+
+  const needle = query.trim().toLowerCase();
+  const filteredFriends = friends.filter((person) => {
+    if (needle && !`${person.name} ${person.lastMsg || ""}`.toLowerCase().includes(needle)) return false;
+    if (filter === "unread") return Number(unreads[person.uid] || 0) > 0;
+    if (filter === "posts") return person.kinds?.includes("post");
+    if (filter === "stories") return person.kinds?.some((kind) => kind.startsWith("story-"));
+    return true;
+  });
+  const filteredCircles = circles.filter((circle) => !needle || `${circle.name} ${circle.description} ${circle.handle}`.toLowerCase().includes(needle));
+
+  return <MobileShell className="p-5 gap-4">
+    <header className="flex items-center justify-between">
+      <div><p className="text-[10px] uppercase tracking-[0.25em] opacity-60 inline-flex items-center gap-1.5">Heartable <BetaBadge /></p><h1 className="font-serif italic text-3xl">Chats</h1></div>
+      <Link to={tab === "circles" ? "/mehfil" : "/search"} aria-label={tab === "circles" ? "Create circle" : "Find friends"} className="size-11 rounded-full bg-sunset-600 text-primary-foreground grid place-items-center"><Plus className="size-5" /></Link>
+    </header>
+    <div className="grid grid-cols-2 bg-muted p-1 rounded-lg">
+      <button onClick={() => setTab("chats")} className={`py-2 rounded-md text-sm font-semibold ${tab === "chats" ? "bg-card shadow-sm" : "text-muted-foreground"}`}>Chats</button>
+      <button onClick={() => setTab("circles")} className={`py-2 rounded-md text-sm font-semibold ${tab === "circles" ? "bg-card shadow-sm" : "text-muted-foreground"}`}>Circles</button>
+    </div>
+    <div className="relative"><Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === "chats" ? "Search conversations or messages" : "Search circles or @handles"} className="w-full pl-9 pr-4 py-3 rounded-lg bg-card border border-input text-sm outline-none" /></div>
+    {tab === "chats" && <>
+      <div className="flex gap-2 overflow-x-auto pb-1">{(["all", "unread", "posts", "stories"] as Filter[]).map((item) => <button key={item} onClick={() => setFilter(item)} className={`px-3 py-1.5 rounded-full text-xs capitalize border ${filter === item ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>{item}</button>)}</div>
+      <div className="space-y-2">{filteredFriends.map((person) => <Link key={person.uid} to="/dm/$uid" params={{ uid: person.uid }} className="flex items-center gap-3 bg-card rounded-lg p-3 border border-border"><Avatar person={person} /><div className="flex-1 min-w-0"><p className="text-sm font-semibold truncate">{person.name}</p><p className="text-xs text-muted-foreground truncate">{person.lastMsg}</p></div>{unreads[person.uid] > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] grid place-items-center">{unreads[person.uid]}</span>}</Link>)}{filteredFriends.length === 0 && <Empty icon={<MessageCircle />} title="No matching chats" text="Mutual followers appear here. Try another search or filter." />}</div>
+    </>}
+    {tab === "circles" && <div className="space-y-2">{filteredCircles.map((circle) => <Link key={circle.id} to="/mehfil/$id" params={{ id: circle.id }} search={{ invite: "" }} className="flex items-center gap-3 bg-card rounded-lg p-3 border border-border"><div className="size-11 rounded-full bg-accent grid place-items-center"><CircleUserRound className="size-5" /></div><div className="flex-1 min-w-0"><p className="font-semibold text-sm truncate">{circle.name}</p><p className="text-xs text-muted-foreground truncate">@{circle.handle} · {Object.keys(circle.members || {}).length} members</p></div><span className="text-[10px] uppercase text-muted-foreground">{circle.visibility}</span></Link>)}{filteredCircles.length === 0 && <Empty icon={<CircleUserRound />} title="No circles found" text="Create a public or private circle from the + button." />}</div>}
+    <BottomNav />
+  </MobileShell>;
 }
 
-function AddChatDrawer({ users, onClose }: { users: Person[]; onClose: () => void }) {
-  const [q, setQ] = useState("");
-  const ql = q.trim().toLowerCase();
-  const list = ql ? users.filter((u) => u.name.toLowerCase().includes(ql) || (u.email || "").toLowerCase().includes(ql)) : users;
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3" onClick={onClose}>
-      <div className="w-full sm:max-w-[420px] bg-card rounded-3xl overflow-hidden max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 border-b border-foreground/10 flex items-center justify-between">
-          <h2 className="font-serif italic text-2xl">New chat</h2>
-          <button onClick={onClose} className="text-sm opacity-60">Close</button>
-        </div>
-        <div className="p-3 border-b border-foreground/10">
-          <div className="relative">
-            <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or email"
-              className="w-full pl-9 pr-4 py-2.5 rounded-full bg-foreground/5 text-sm outline-none" />
-          </div>
-        </div>
-        <div className="overflow-y-auto p-2 space-y-1">
-          {list.length === 0 && <p className="text-center text-xs opacity-50 py-8">No matching people found.</p>}
-          {list.map((u) => (
-            <Link key={u.uid} to="/dm/$uid" params={{ uid: u.uid }} onClick={onClose}
-              className="flex items-center gap-3 p-2 rounded-xl hover:bg-foreground/5">
-              <div className="size-9 rounded-full bg-sunset-200 grid place-items-center text-xs font-semibold overflow-hidden">
-                {u.photo ? <img src={u.photo} className="w-full h-full object-cover" /> : u.name.slice(0, 1).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate flex items-center gap-1">{u.name} <UserBadges uid={u.uid} email={u.email} size={10} /></p>
-                <p className="text-[10px] opacity-50 truncate">{u.email || "Tap to open chat"}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+function Avatar({ person }: { person: Person }) { return <div className="size-11 rounded-full bg-accent grid place-items-center overflow-hidden font-semibold">{person.photo ? <img src={person.photo} alt="" className="size-full object-cover" /> : person.name.slice(0, 1).toUpperCase()}</div>; }
+function Empty({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) { return <div className="text-center py-12 px-6 text-muted-foreground"><div className="size-10 mx-auto opacity-40">{icon}</div><p className="text-sm font-semibold text-foreground mt-3">{title}</p><p className="text-xs mt-1">{text}</p></div>; }
